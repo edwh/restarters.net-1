@@ -1,0 +1,75 @@
+.popover-group {
+  bottom: 2px;
+  left: 5px;
+
+  svg {
+    position: relative;
+    z-index: 1;
+    top: 2px;
+    margin-right: 5px;
+  }
+}
+
+.popover-body {
+  font-size: 14px;
+  font-family: $font-family-second;
+  color: #5a5a5a;
+}
+
+.popover__table {
+  border-color: $brand;
+  border: 0;
+
+  .popover-body {
+    font-size: 13px;
+    background-color: $black;
+    border-radius: 0;
+    color: $white;
+    padding: 5px 10px;
+  }
+
+  .arrow::after,
+  .arrow::before {
+    border-bottom-color: $black;
+    border-top-color: $black;
+  }
+}
+
+.popover-calendar-feed {
+  font-family: $font-family-second;
+  min-width: 370px;
+  border: 0;
+
+  .arrow {
+    top: calc((0.5rem) * -1);
+    color: rgba(0, 0, 0, 0.125);
+    z-index: 1;
+  }
+
+  .popover-body {
+    padding: 0;
+  }
+
+  .form-control {
+    height: 50px;
+    margin-right: 10px;
+  }
+
+  .card {
+    font-size: 13px;
+
+    .btn {
+      min-width: 0;
+      font-size: 0;
+    }
+  }
+
+  p {
+    color: $black;
+  }
+
+  a {
+    color: $black;
+    text-decoration: underline;
+  }
+}

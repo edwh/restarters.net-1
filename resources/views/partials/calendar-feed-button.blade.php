@@ -19,6 +19,12 @@
   </div>
 </div>
 
-<button type="button" class="btn btn-normal-padding btn-sm btn-primary mx-2 btn-calendar-feed">
-  @include('partials.svg-icons.calendar-icon') <span class="span-vertically-align-middle">@lang('calendars.add_to_calendar')</span>
-</button>
+@if (isset($single_event) && $single_event == true)
+  <button type="button" class="btn btn-primary btn-sm btn-calendar-feed">
+    @include('svgs.fixometer.calendar-plus-icon')
+  </button>
+@else
+  <button type="button" class="btn btn-normal-padding btn-sm btn-primary mx-2 btn-calendar-feed">
+    @include('partials.svg-icons.calendar-icon') <span class="span-vertically-align-middle">@lang('calendars.add_to_calendar')</span>
+  </button>
+@endif

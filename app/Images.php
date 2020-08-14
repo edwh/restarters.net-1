@@ -21,4 +21,15 @@ class Images extends Model
      * @var array
      */
     protected $hidden = [];
+
+    public function getAssetPathAttribute()
+    {
+        $asset_path = asset('/uploads/thumbnail_' . $this->path);
+
+        if ( ! file_exists(public_path($asset_path))) {
+            return asset('/images/placeholder-avatar.png');
+        }
+
+        return $asset_path;
+    }
 }

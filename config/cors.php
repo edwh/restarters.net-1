@@ -11,9 +11,13 @@ return [
     | to accept any value.
     |
     */
-   
-    'supportsCredentials' => false,
-    'allowedOrigins' => ['*'],
+
+    'supportsCredentials' => true,
+    'allowedOrigins' => [
+        'https://therestartproject.org',
+        env('WIKI_URL'),
+        env('DISCOURSE_URL'),
+    ],
     'allowedOriginsPatterns' => [],
     'allowedHeaders' => ['*'],
     'allowedMethods' => ['*'],

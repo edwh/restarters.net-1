@@ -7,12 +7,11 @@ use App\Network;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
-
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Group extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
+    use \OwenIt\Auditing\Auditable, \App\Traits\GlobalScopes;
 
     protected $table = 'groups';
     protected $primaryKey = 'idgroups';
@@ -23,6 +22,7 @@ class Group extends Model implements Auditable
      */
     protected $fillable = [
         'name',
+        'discourse_slug',
         'website',
         'area',
         'location',
@@ -58,7 +58,6 @@ class Group extends Model implements Auditable
             $builder->withCount('allRestarters');
         });
     }
-
 
     public function addTag($tag)
     {
@@ -197,7 +196,6 @@ class Group extends Model implements Auditable
         return $this->hasOne('App\Xref', 'reference', 'idgroups')->where('reference_type', env('TBL_GROUPS'))->where('object_type', 5);
     }
 
-
     public function allHosts()
     {
         return $this->hasMany('App\UserGroups', 'group', 'idgroups')->where('role', 3);
@@ -301,8 +299,9 @@ class Group extends Model implements Auditable
      */
     public function makeMemberAHost($groupMember)
     {
-        if (!$this->allVolunteers()->pluck('user')->contains($groupMember->id))
+        if ( ! $this->allVolunteers()->pluck('user')->contains($groupMember->id)) {
             throw new \Exception('Volunteer is not currently in this group.  Only existing group members can be made hosts.');
+        }
 
         $userGroupAssociation = UserGroups::where('user', $groupMember->id)
                                 ->where('group', $this->idgroups)->first();
@@ -326,7 +325,7 @@ class Group extends Model implements Auditable
      * @param int|null $user_id
      * @return bool
      */
-    public function isVolunteer($user_id = NULL)
+    public function isVolunteer($user_id = null)
     {
         $attributes = ['user' => $user_id ?: auth()->id()];
 
@@ -418,24 +417,24 @@ class Group extends Model implements Auditable
 
     public function getNextUpcomingEvent()
     {
-      $event = $this->parties()
-             ->whereNotNull('wordpress_post_id')
-             ->whereDate('event_date', '>=', date('Y-m-d'))
-             ->orderBy('event_date', 'asc');
+        $event = $this->parties
+      ->where('wordpress_post_id', '!=', null)
+      ->where('event_date', '>=', date('Y-m-d'))
+      ->sortBy('event_date');
 
-      if ( ! $event->count() ) {
-          return null;
-      }
+        if ( ! $event->count()) {
+            return null;
+        }
 
-      return $event->first();
+        return $event->first();
     }
 
     public function userEvents()
     {
-      return $this->parties()
+        return $this->parties()
       ->join('events_users', 'events.idevents', '=', 'events_users.event')
-      ->where(function($query) {
-        $query->where('events.group', $this->idgroups)
+      ->where(function ($query) {
+          $query->where('events.group', $this->idgroups)
         ->where('events_users.user', auth()->id());
       })
       ->select('events.*')
@@ -446,7 +445,93 @@ class Group extends Model implements Auditable
 
     public function getApprovedAttribute()
     {
-        return !is_null($this->wordpress_post_id);
+        return ! is_null($this->wordpress_post_id);
+    }
+
+    /**
+     * @author Christopher Kelker 26/02/2020
+     * @param  array $data - if null then check current \App\Group object
+     */
+    public function createOrUpdateDiscourseGroup(array $data = null)
+    {
+        $client = app('discourse-client');
+
+        $slug = isset($data['slug']) ? $data['slug'] : $this->discourse_slug;
+
+        if ( ! $slug) {
+            return false;
+        }
+
+        // Attempt retrieve existing Discourse Group
+        $response = $client->request('GET', "/groups/{$slug}.json");
+
+        // Default http method and path
+        $http_method = 'POST';
+        $url = '/admin/groups';
+
+        // Group already exists on Discourse - change conditions to update existing.
+        if ($response->getStatusCode() == 200) {
+            $array = json_decode($response->getBody()->getContents(), true);
+            $discourse_group_id = $array['group']['id'];
+            $http_method = 'PUT';
+            $url = "/groups/{$discourse_group_id}.json";
+        }
+
+        $response = $client->request($http_method, $url, [
+            'form_params' => [
+                'group' => [
+                    'name' => $slug,
+                    'title' => isset($data['name']) ? $data['name'] : $this->name,
+                ],
+            ],
+        ]);
+
+        $response = $client->request('GET', "/groups/{$slug}.json");
+
+        $array = json_decode($response->getBody()->getContents(), true);
+
+        return (object) $array['group'];
+    }
+
+    /**
+     * @author Christopher Kelker 26/02/2020
+     * @param  string/array $usernames - accept a string as 1 or array as many.
+     */
+    public function addUsersToDiscourseGroup($usernames)
+    {
+        $client = app('discourse-client');
+
+        if ( ! is_array($usernames)) {
+            $usernames = explode(',', $usernames);
+        }
+
+        if ( ! $this->discourse_slug) {
+            return false;
+        }
+
+        // Attempt retrieve existing Discourse Group
+        $response = $client->request('GET', "/groups/{$this->discourse_slug}.json");
+
+        if ($response->getStatusCode() != 200) {
+            return false;
+        }
+
+        $array = json_decode($response->getBody()->getContents(), true);
+        $discourse_group_id = $array['group']['id'];
+
+        $response = $client->request(
+            'PUT',
+            "/groups/{$discourse_group_id}/members.json",
+            [
+                'form_params' => [
+                    'usernames' => implode(',', $usernames),
+                ],
+            ]
+        );
+
+        $array = json_decode($response->getBody()->getContents(), true);
+
+        return (object) $array;
     }
 
     public function networks()

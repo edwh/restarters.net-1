@@ -1,0 +1,24 @@
+.tooltip {
+  top: -6px !important;
+
+  .arrow {
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
+  .tooltip-inner {
+    @extend .rounded-0;
+
+    padding: 8px 12px;
+    font-family: Asap;
+    font-size: 12px;
+    font-weight: normal;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.67;
+    letter-spacing: normal;
+    text-align: center;
+    color: $white;
+    max-width: none;
+  }
+}

@@ -102,6 +102,13 @@
                     <td>Used to distinguish users on the Google Analytics platform and to control the speed at which requests are made to the Google Analytics platform. Statistics derived from this information help us identify how well certain pages and aspects of the site perform, and where we can make improvements to help visitors access the information they need more quickly and with less hassle.</td>
                     <td>Analytical / Performance</td>
                 </tr>
+
+                <tr>
+                    <td>has_cookie_notifications_set</td>
+                    <td>.restarters.net</td>
+                    <td>This is a necessary cookie to check for notifications from Discourse. We use this cookie to check for new notifications every 10 minutes to be stored in the restarters.net database. A notification might be a topic or badge update.</td>
+                    <td>Cookie expiry: 10 minutes / Necessary</td>
+                </tr>
             </tbody>
         </table>
 

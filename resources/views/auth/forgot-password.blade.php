@@ -6,7 +6,7 @@
             @include('includes.logo')
            </div>
 
-            <div class="entry-panel card card__login col-12 mt-5 text-left">
+            <div class="entry-panel card card__login card-info-box mt-5 text-left">
 
                 @if(isset($response))
                   @php( FixometerHelper::printResponse($response) )
@@ -23,10 +23,10 @@
                     </div>
 
                     <div class="row entry-panel__actions">
-                        <div class="col-8 align-content-center d-flex">
+                        <div class="col-7 align-content-center d-flex">
                             <a class="entry-panel__link" href="/login">@lang('auth.sign_in')</a>
                         </div>
-                        <div class="col-4 align-content-center justify-content-end d-flex">
+                        <div class="col-5 align-content-center justify-content-end d-flex">
                             <button type="submit" class="btn btn-primary">@lang('auth.reset')</button>
                         </div>
                     </div>
@@ -39,5 +39,5 @@
         </div>
  @include('partials.languages')
     </section>
-   
+
 @include('layouts.footer')

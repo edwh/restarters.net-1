@@ -16,7 +16,6 @@ use Auth;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
-
 use Request;
 
 class FixometerHelper
@@ -56,8 +55,12 @@ class FixometerHelper
         return Permissions::all();
     }
 
-    /** checks if user has a role **/
-    public static function hasRole($user, $role)
+    /**
+     * Check if user has a role (singular or any role within an array)
+     * @editor Christopher Kelker 24/02/2020
+     * @return boolean
+     */
+    public static function hasRole($user, $roles)
     {
         if (Auth::guest()) {
             return false;
@@ -67,12 +70,18 @@ class FixometerHelper
             $user = Auth::user();
         }
 
-        $usersRole = $user->role()->first()->role;
+        $usersRole = $user->userRole->role;
+
         if ($usersRole == 'Root') {
             return true;
         }
-        if ($usersRole == ucwords($role)) {
-            return true;
+
+        if ( ! is_array($roles)) {
+          $roles = [$roles];
+        }
+
+        if (in_array(strtolower($usersRole), array_map("strtolower", $roles))) {
+          return true;
         }
 
         return false;
@@ -883,19 +892,23 @@ class FixometerHelper
     }
 
     /** checks if user has preference **/
-    public static function hasPermission($slug)
+    public static function hasPermission($slug, $user = null)
     {
-
-      // Check if guest
-        if (Auth::guest()) {
+        // Check if guest
+        if (Auth::guest() || is_null($user)) {
             return false;
+        }
+
+        $user_id = Auth::user();
+        if ($user) {
+            $user_id = $user->id;
         }
 
         // Check if Permission Exists
         $has_permission = UsersPermissions::join('permissions', 'permissions.idpermissions', '=', 'users_permissions.permission_id')
-                                      ->where('users_permissions.user_id', Auth::user()->id)
-                                        ->where('permissions.slug', $slug)
-                                          ->first();
+        ->where('users_permissions.user_id', $user_id)
+        ->where('permissions.slug', $slug)
+        ->first();
 
         // Does user have it?
         if (empty($has_permission)) {
@@ -1092,5 +1105,12 @@ class FixometerHelper
         // If $date_to_check is equal to one of or in between the
         // two dates then return true, else false
         return ($date_to_check >= $date_from) && ($date_to_check <= $date_to);
+    }
+
+    public static function previousWithHash(string $hash = null, $with_data)
+    {
+        return redirect()->back()
+        ->with($flashData)
+        ->with('formHash', $hash);
     }
 }

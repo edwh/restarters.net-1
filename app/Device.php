@@ -206,6 +206,7 @@ AND devices.event = events.idevents ';
             $sql .= ', `event`';
         }
 
+
         if ( ! is_null($g) && is_numeric($g) && is_null($year)) {
             return DB::select(DB::raw($sql), array('g' => $g));
         } elseif ( ! is_null($year) && is_numeric($year) && is_null($g)) {
@@ -601,5 +602,33 @@ AND devices.event = events.idevents ';
         $File = new \FixometerFile;
 
         return $File->findImages(env('TBL_DEVICES'), $this->iddevices);
+    }
+
+    public function getStats($emissionRatio)
+    {
+        $co2Diverted = 0;
+        $ewasteDiverted = 0;
+
+        switch ($this->repair_status) {
+          case 1:
+            $co2Diverted += $this->co2Diverted($emissionRatio, $this->displacement);
+            $ewasteDiverted += $this->ewasteDiverted();
+            $is_fixed = true;
+            break;
+          case 2:
+            $repairable = true;
+            break;
+          case 3:
+            $dead_device = true;
+            break;
+        }
+
+        return [
+            'co2_emissions_prevented' => $co2Diverted,
+            'ewaste_prevented' => $ewasteDiverted,
+            'is_fixed' => $is_fixed,
+            'is_repairable' => $repairable,
+            'is_dead' => $dead_device,
+        ];
     }
 }

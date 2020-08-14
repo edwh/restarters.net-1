@@ -12,25 +12,9 @@
     <td class="d-none d-md-table-cell"><div class="model">{{ $device->model }}</div></td>
     <td class="d-none d-md-table-cell"><div class="age">{{ $device->age }}</div></td>
     <td width="300"><div class="problem">{!! $device->getShortProblem() !!}</div></td>
-    @if ( $device->repair_status == 1 )
-      <td><div class="repair_status"><span class="badge badge-success">@lang('partials.fixed')</span></div></td>
-    @elseif ( $device->repair_status == 2 )
-      <td><div class="repair_status"><span class="badge badge-warning">@lang('partials.repairable')</span></div></td>
-    @elseif ( $device->repair_status == 3 )
-      <td><div class="repair_status"><span class="badge badge-danger">@lang('partials.end')</span></div></td>
-    @else
-      <td><div class="repair_status"></div></td>
-    @endif
-    <?php /*
-    @if ($device->more_time_needed == 1)
-      <td><div class="repair_details">@lang('partials.more_time')</div></td>
-    @elseif ($device->professional_help == 1)
-      <td><div class="repair_details">@lang('partials.professional_help')</div></td>
-    @elseif ($device->do_it_yourself == 1)
-      <td><div class="repair_details">@lang('partials.diy')</div></td>
-    @else
-      <td><div class="repair_details">N/A</div></td>
-    @endif*/ ?>
+
+    @include('partials/device-status', ['status' => $device->repair_status])
+
     <td>
       <svg @if ( $device->spare_parts == 0 || $device->spare_parts == 2 ) style="display: none;" @endif class="table-tick" width="21" height="17" viewBox="0 0 16 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;position:relative;z-index:1"><g><path d="M5.866,12.648l2.932,-2.933l-5.865,-5.866l-2.933,2.933l5.866,5.866Z" style="fill:#0394a6;"/><path d="M15.581,2.933l-2.933,-2.933l-9.715,9.715l2.933,2.933l9.715,-9.715Z" style="fill:#0394a6;"/></g></svg>
     </td>
@@ -43,7 +27,7 @@
     <td colspan="11">
         <form id="data-{{ $device->iddevices }}" class="edit-device" data-device="{{ $device->iddevices }}" method="post" enctype="multipart/form-data">
 
-        <div class="row row-compressed-xs nested-fields d-lg-table col-lg-12">
+        <div class="row no-gutters row-compressed-xs nested-fields d-lg-table col-lg-12">
 
           <div class="col-12 col-sm-6 col-device-auto">
 
@@ -203,7 +187,7 @@
           </div>
 
         </div><!-- /row -->
-        <div class="row row-compressed-xs nested-fields table-row-more">
+        <div class="row no-gutters row-compressed-xs nested-fields table-row-more">
           <div class="col-12 col-lg-6 flex-column d-flex">
 
               <label for="problem-{{ $device->iddevices }}">@lang('partials.description_of_problem_solution'):</label>
@@ -238,7 +222,7 @@
 
         </form>
 
-        <div class="row row-compressed-xs nested-fields table-row-more">
+        <div class="row no-gutters row-compressed-xs nested-fields table-row-more">
           <div class="col-12 col-lg-6 flex-column d-flex">
               <div class="form-group">
                   <label>@lang('partials.add_image'):</label>
@@ -275,7 +259,7 @@
 <tr class="collapse table-row-details" id="row-{{ $device->iddevices }}">
     <td colspan="11">
 
-        <div class="row row-compressed-xs nested-fields d-lg-table col-lg-12">
+        <div class="row no-gutters row-compressed-xs nested-fields d-lg-table col-lg-12">
 
           <div class="col-12 col-sm-6 col-device-auto">
 
@@ -435,7 +419,7 @@
           </div>
 
         </div><!-- /row -->
-        <div class="row row-compressed-xs nested-fields table-row-more">
+        <div class="row no-gutters row-compressed-xs nested-fields table-row-more">
           <div class="col-12 col-lg-6 flex-column d-flex">
 
               <label for="problem-{{ $device->iddevices }}">@lang('partials.description_of_problem_solution'):</label>
@@ -465,7 +449,7 @@
 
         </div><!-- /row -->
 
-        <div class="row row-compressed-xs nested-fields table-row-more">
+        <div class="row no-gutters row-compressed-xs nested-fields table-row-more">
             <div class="col-12 col-lg-6 device-images">
               <label for="device-image-{{ $device->iddevices }}">@lang('partials.device_images'):</label>
               <div class="previews">

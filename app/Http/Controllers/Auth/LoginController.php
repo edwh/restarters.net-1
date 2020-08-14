@@ -33,6 +33,8 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/dashboard';
 
+
+
     /**
      * Create a new controller instance.
      *
@@ -41,6 +43,10 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+
+        if (str_contains(url()->previous(), 'wiki')) {
+            $this->redirectTo = back();
+        }
     }
 
     /**
@@ -53,7 +59,6 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-
         $this->validateLogin($request);
 
         // If the class is using the ThrottlesLogins trait, we can automatically throttle

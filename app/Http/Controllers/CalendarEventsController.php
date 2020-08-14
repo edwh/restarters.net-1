@@ -120,6 +120,19 @@ class CalendarEventsController extends Controller
       $this->exportCalendar($events);
     }
 
+    public function singleEvent(Request $request, $event_id)
+    {
+        $events = Party::join('groups', 'groups.idgroups', '=', 'events.group')
+        ->whereNull('deleted_at')
+        ->where('events.idevents', $event_id)
+        ->select('events.*', 'groups.name')
+        ->get();
+
+        abort_if($events->isEmpty(), 404, 'Event not found.');
+
+        $this->exportCalendar($events);
+    }
+
     public function exportCalendar($events)
     {
       $icalObject[] =  "BEGIN:VCALENDAR";
@@ -135,7 +148,7 @@ class CalendarEventsController extends Controller
           if ( ! is_null($event->event_date) && $event->event_date != '0000-00-00') {
               $icalObject[] =  "BEGIN:VEVENT";
 
-              // Timezone currently fixed to Europe/London, but in future when we 
+              // Timezone currently fixed to Europe/London, but in future when we
               // have better timezone support in the app this will need amending.
               $icalObject[] =  "TZID:Europe/London";
               $icalObject[] =  "UID:{$event->idevents}";

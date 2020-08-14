@@ -1,8 +1,11 @@
-@if( Auth::guest() )
+@auth
+  @include('layouts/global_header')
+@endauth
+
+@guest
   @include('layouts/header_plain')
-@else
-  @include('layouts/header')
-@endif
+@endguest
+
 @yield('content')
 
 <!-- Modal -->

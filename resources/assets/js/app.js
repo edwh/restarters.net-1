@@ -758,6 +758,21 @@ function initAutocomplete() {
       jQuery('.select2').select2();
       jQuery('.select2-repair-barrier').select2(repair_barrier_options);
       jQuery('.select2-tags').select2(tag_options);
+      jQuery('.select2-categories').select2(
+        Object.assign(tag_options, {placeholder: "Category"})
+      );
+      jQuery('.select2-tags-placeholder').select2(
+        Object.assign(tag_options, {placeholder: "Tag"})
+      );
+      jQuery('.select2-countries').select2(
+        Object.assign(tag_options, {placeholder: "Country"})
+      );
+      jQuery('.select2-repair-status').select2(
+        Object.assign(tag_options, {placeholder: "Repair status"})
+      );
+      jQuery('.select2-group').select2(
+        Object.assign(tag_options, {placeholder: "Group"})
+      );
       jQuery(".select2-with-input").select2(tag_options_with_input);
       jQuery(".select2-with-input-group").select2({
         width: 'auto',
@@ -770,6 +785,21 @@ function initAutocomplete() {
       $target.find('.select2').select2();
       $target.find('.select2-repair-barrier').select2(repair_barrier_options);
       $target.find('.select2-tags').select2(tag_options);
+      $target.find('.select2-categories').select2(
+        Object.assign(tag_options, {placeholder: "Category"})
+      );
+      $target.find('.select2-tags-placeholder').select2(
+        Object.assign(tag_options, {placeholder: "Tag"})
+      );
+      $target.find('.select2-countries').select2(
+        Object.assign(tag_options, {placeholder: "Country"})
+      );
+      $target.find('.select2-repair-status').select2(
+        Object.assign(tag_options, {placeholder: "Repair status"})
+      );
+      $target.find('.select2-group').select2(
+        Object.assign(tag_options, {placeholder: "Group"})
+      );
       $target.find(".select2-with-input").select2(tag_options_with_input);
       $target.find(".select2-with-input-group").select2({
         width: 'auto',
@@ -1099,9 +1129,9 @@ function initAutocomplete() {
     $('.tokenfield').tokenfield();
 
     $current_column = $('input[name=sort_column]:checked').val();
-
     $('input[name=sort_column]').on('click', function(e) {
         $form = $('#device-search');
+
         $sort_direction = $form.find('input[name=sort_direction]');
             if( $sort_direction.val() === 'DSC' ){
                 $sort_direction.val('ASC');
@@ -1291,7 +1321,7 @@ function initAutocomplete() {
         this.value = this.value + "\n";
       }
     });
-    
+
     $('#participants_qty').on('change', function() {
       updateParticipants();
     });
@@ -1674,3 +1704,5 @@ function initAutocomplete() {
 
     alert("Copied the link: " + $copy_link);
   });
+
+  require('./changes');

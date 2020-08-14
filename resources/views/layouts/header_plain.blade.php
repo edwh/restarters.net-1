@@ -50,6 +50,10 @@
             </script>
         @endif
 
+        <!-- Styles -->
+        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+        <link href="{{ asset('global/css/app.css') }}" rel="stylesheet">
+
     </head>
     @if( Request::is('login') || Request::is('user/register') )
       <body class="fixed-layout">

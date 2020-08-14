@@ -36,6 +36,13 @@ class LogSuccessfulLogin
         $user->last_login_at = Carbon::now()->toDateTimeString();
         $user->number_of_logins += 1;
 
+        // Sync user with Groups on Discourse
+        if ( ! $user->groups->isEmpty()) {
+            $user->groups->each(function ($group, $key) use ($user) {
+                $group->addUsersToDiscourseGroup($user->username);
+            });
+        }
+
         $user->save();
     }
 }

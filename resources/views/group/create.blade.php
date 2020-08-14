@@ -49,6 +49,14 @@
                 </div>
                 <small class="after-offset">@lang('groups.groups_group_small')</small>
 
+                @if( FixometerHelper::hasRole(Auth::user(), 'Administrator') )
+                  <div class="form-group form-group__offset">
+                      <label for="grp_slug">@lang('groups.groups_discourse_slug'):</label>
+                      <input type="text" class="form-control field" id="grp_slug" name="discourse_slug">
+                  </div>
+                  <small class="after-offset">@lang('groups.groups_discourse_slug_helper')</small>
+                @endif
+
                 <div class="form-group form-group__offset">
                     <label for="grp_web">@lang('groups.groups_website'):</label>
                     <input type="url" class="form-control field" id="grp_web" name="website" placeholder="https://">
@@ -125,40 +133,23 @@
 
 
                   <div class="form-group">
-
-                      <div class="previews"></div>
-
-                      <label for="file">@lang('groups.group_image'):</label>
-
-                      <!-- <form id="dropzoneSingleEl" class="dropzone" action="/" method="post" enctype="multipart/form-data" data-field1="@lang('groups.field_group_images')" data-field2="@lang('groups.field_group_images_2')"> -->
-                          <div class="fallback">
-                              <input id="file" name="file" type="file" />
-                          </div>
-                      <!-- </form> -->
-
-                      <!-- <div id="dropzoneSingleEl-create" name="dropzone" class="dropzone" action="/" method="post" enctype="multipart/form-data" data-field1="@lang('groups.field_group_images') " data-field2="@lang('groups.field_group_images_2')">
-                          <div class="fallback">
-                              <input id="file" name="file" type="file" />
-                          </div>
-                      </div>
-
-                      <div class="previews">
-                        <div class="uploads"></div>
-                      </div> -->
-
-
-
+                    <div class="previews"></div>
+                    <label for="file">@lang('groups.group_image'):</label>
+                    <div class="fallback">
+                      <input id="file" name="file" type="file" />
+                    </div>
                   </div>
 
                 </div>
 
-                <div class="button-group row row-compressed-xs">
-                    <div class="col-lg-8 d-flex align-items-center justify-content-start">
-                        <span class="button-group__notice">@lang('groups.groups_approval_text')</span>
-                    </div>
-                    <div class="col-lg-4 d-flex align-items-center justify-content-end">
-                        <button type="submit" class="btn btn-primary btn-create">@lang('groups.create_group')</button>
-                    </div>
+                <div class="d-flex flex-column flex-lg-row align-items-end justify-content-end">
+                    <span class="button-group__notice text-right mb-20 mb-lg-auto mr-lg-20">
+                      @lang('groups.groups_approval_text')
+                    </span>
+
+                  <button type="submit" name="button" class="btn btn-primary btn-block btn-create float-right">
+                    @lang('groups.create_group')
+                  </button>
                 </div>
               </form>
 

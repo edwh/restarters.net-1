@@ -1,0 +1,45 @@
+.collapse-plus-and-minus {
+  button {
+    h5 {
+      &::after {
+        content: '';
+        background-image: url(../../svgs/add-icon.svg);
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        background-repeat: no-repeat;
+        text-align: center;
+        vertical-align: middle;
+        position: absolute;
+        right: 0;
+      }
+    }
+
+    &:not(.collapsed) {
+      h5 {
+        &::after {
+          background-image: url(../../svgs/minus-icon.svg);
+        }
+      }
+    }
+  }
+}
+
+.collapse-plus-and-minus-controller {
+  &::after {
+    content: '';
+    background-image: url(../../svgs/add-icon.svg);
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  &:not(.collapsed) {
+    &::after {
+      background-image: url(../../svgs/minus-icon.svg);
+    }
+  }
+}

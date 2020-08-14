@@ -11,7 +11,7 @@
           $device = 'repairable';
           break;
         case( 1 ):
-          $state = 'success';
+          $state = 'primary';
           $device = 'fixed';
           break;
 
@@ -22,6 +22,6 @@
     endswitch;
 @endphp
 
-<td class="repair_status" @if( !is_null($user_preferences) && !in_array('repair_status', $user_preferences) ) style="display: none;" @endif>
+<td class="repair_status text-center" @if( !is_null($user_preferences) && !in_array('repair_status', $user_preferences) ) style="display: none;" @endif>
     <span class="badge badge-{{ $state }}">@lang('devices.' . $device)</span>
 </td>

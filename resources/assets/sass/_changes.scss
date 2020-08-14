@@ -1,0 +1,43 @@
+// Helpers
+@import "helpers/box-shadows";
+@import "helpers/hoverable";
+@import "helpers/flex";
+@import "helpers/arbitrary";
+@import "helpers/positioning";
+
+@import "components/collapse";
+@import "components/popover";
+@import "components/filter-controls";
+@import "components/tooltip";
+
+// Pages
+@import "pages/dashboard";
+
+// Plugins
+@import "~slick-carousel/slick/slick.scss";
+@import "~slick-carousel/slick/slick-theme.scss";
+
+.deviceFilterContainer {
+  .form-control__select {
+    border: 1px solid black !important;
+    height: 50px !important;
+
+    .select2-container--default {
+      border-radius: 0 !important;
+      top: 2px;
+    }
+
+    .select2-selection--multiple {
+      border-radius: 0 !important;
+    }
+
+    .select2-search__field {
+      margin-top: 8px;
+    }
+  }
+
+  .form-control.field {
+    height: 50px;
+    border: 1px solid #000;
+  }
+}
