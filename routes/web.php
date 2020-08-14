@@ -11,23 +11,6 @@
 |
 */
 
-Route::get('/testing123', function () {
-    $client = app('discourse-client');
-
-    $response = $client->request('GET', "/users/Dean_Claydon.json");
-
-    if ($response->getStatusCode() != 200 || $response->getReasonPhrase() != 'OK') {
-        return false;
-    }
-
-    $array = json_decode($response->getBody()->getContents(), true);
-
-
-    $user = \App\User::where('email', 'hello@dean.codes')->first();
-
-    dd($array, $user);
-});
-
 Route::prefix('user')->group(function () {
     Route::get('/', 'HomeController@index');
     Route::get('reset', 'UserController@reset');
@@ -37,6 +20,8 @@ Route::prefix('user')->group(function () {
     Route::get('register/{hash?}', 'UserController@getRegister')->name('registration');
     Route::post('register/check-valid-email', 'UserController@postEmail');
     Route::post('register/{hash?}', 'UserController@postRegister');
+    Route::get('/thumbnail/', 'UserController@getThumbnail');
+    Route::get('/menus/', 'UserController@getUserMenus');
 });
 
 Route::get('/user/forbidden', function () {
@@ -77,12 +62,12 @@ Route::prefix('calendar')->group(function () {
     Route::get('/group-area/{area}', 'CalendarEventsController@allEventsByArea')->name('calendar-events-by-area');
     Route::get('/group-tag/{grouptags_groups}', 'CalendarEventsController@allEventsByGroupTag')->name('calendar-events-by-group-tag');
     Route::get('/all-events/{hash_env}', 'CalendarEventsController@allEvents')->name('calendar-events-all');
-    Route::get('/single-event/{event_id}', 'CalendarEventsController@singleEvent')->name('calendar-events-single');
 });
 
 Route::prefix('faultcat')->group(function () {
     Route::get('/', 'FaultcatController@index');
     Route::post('/', 'FaultcatController@index');
+    Route::get('/status', 'FaultcatController@status');
     Route::get('/demographics', 'FaultcatController@demographics');
     Route::post('/demographics', 'FaultcatController@storeDemographics');
 });
@@ -94,16 +79,31 @@ Route::prefix('misccat')->group(function () {
     Route::get('/status', 'MisccatController@status');
 });
 
+Route::prefix('MobiFix')->group(function () {
+    Route::get('/', 'MobifixController@index');
+    Route::post('/', 'MobifixController@index');
+    Route::get('/cta', 'MobifixController@cta');
+    Route::get('/status', 'MobifixController@status');
+});
+Route::prefix('mobifix')->group(function () {
+    Route::get('/', 'MobifixController@index');
+    Route::post('/', 'MobifixController@index');
+    Route::get('/cta', 'MobifixController@cta');
+    Route::get('/status', 'MobifixController@status');
+});
+
 Route::group(['middleware' => ['auth', 'verifyUserConsent']], function () {
     Route::get('/', 'HomeController@index')->name('home');
 
     //User Controller
     Route::prefix('profile')->group(function () {
         Route::get('/', 'UserController@index')->name('profile');
-        Route::get('/{id}', 'UserController@index');
+        Route::get('/notifications', 'UserController@getNotifications')->name('notifications');
         Route::get('/edit/{id?}', 'UserController@getProfileEdit')->name('edit-profile');
+        Route::get('/{id}', 'UserController@index');
         Route::post('/edit-info', 'UserController@postProfileInfoEdit');
         Route::post('/edit-password', 'UserController@postProfilePasswordEdit');
+        Route::post('/edit-language', 'UserController@storeLanguage');
         Route::post('/edit-preferences', 'UserController@postProfilePreferencesEdit');
         Route::post('/edit-tags', 'UserController@postProfileTagsEdit');
         Route::post('/edit-photo', 'UserController@postProfilePictureEdit');
@@ -125,7 +125,6 @@ Route::group(['middleware' => ['auth', 'verifyUserConsent']], function () {
 
     //Admin Controller
     Route::prefix('admin')->group(function () {
-        Route::get('/', 'AdminController@index');
         Route::get('/stats', 'AdminController@stats');
     });
 
@@ -137,16 +136,24 @@ Route::group(['middleware' => ['auth', 'verifyUserConsent']], function () {
     });
 
     //Dashboard Controller
-    Route::redirect('dashboard', 'home');
-    Route::prefix('home')->group(function () {
+    Route::prefix('dashboard')->group(function () {
         Route::get('/', 'DashboardController@index')->name('dashboard')->middleware('AcceptUserInvites');
         Route::get('/host', 'DashboardController@getHostDash');
     });
 
     //Device Controller
     Route::resource('device-url', 'DeviceUrlController');
-    Route::prefix('device')->group(function () {
+
+    Route::prefix('fixometer')->group(function () {
         Route::get('/', 'DeviceController@index')->name('devices');
+        Route::get('/search', 'DeviceController@search')->name('fixometer-search');
+    });
+
+    // TODO: the rest of these to be redirected properly.
+    Route::prefix('device')->group(function () {
+        Route::get('/', function() {
+            return redirect('/fixometer');
+        });
         Route::get('/search', 'DeviceController@search');
         Route::get('/page-edit/{id}', 'DeviceController@edit');
         Route::post('/page-edit/{id}', 'DeviceController@edit');
@@ -158,20 +165,26 @@ Route::group(['middleware' => ['auth', 'verifyUserConsent']], function () {
         Route::post('/column-preferences', 'DeviceController@columnPreferences');
     });
 
+    Route::resource('networks', 'NetworkController');
+    Route::prefix('networks')->group(function () {
+        Route::post('/{network}/groups', 'NetworkController@associateGroup')->name('networks.associate-group');
+    });
+
     //Group Controller
     Route::prefix('group')->group(function () {
-        Route::get('/', 'GroupController@index')->name('groups');
         Route::get('/create', 'GroupController@create')->name('create-group');
         Route::post('/create', 'GroupController@create');
         Route::get('/edit/{id}', 'GroupController@edit');
         Route::post('/edit/{id}', 'GroupController@edit');
-        Route::get('/view/{id}', 'GroupController@view');
+        Route::get('/view/{id}', 'GroupController@view')->name('group.show');
         Route::post('/invite', 'GroupController@postSendInvite');
         Route::get('/accept-invite/{id}/{hash}', 'GroupController@confirmInvite');
         Route::get('/join/{id}', 'GroupController@getJoinGroup');
         Route::post('/image-upload/{id}', 'GroupController@imageUpload');
         Route::get('/image/delete/{idgroups}/{id}/{path}', 'GroupController@ajaxDeleteImage');
         Route::get('/search/column', 'GroupController@searchColumn');
+        Route::get('/{all?}', 'GroupController@index')->name('groups');
+        Route::get('/all/search', 'GroupController@search');
         Route::get('/search', 'GroupController@searchColumn');
         Route::get('/make-host/{group_id}/{user_id}', 'GroupController@getMakeHost');
         Route::get('/remove-volunteer/{group_id}/{user_id}', 'GroupController@getRemoveVolunteer');
@@ -259,9 +272,7 @@ Route::group(['middleware' => ['auth', 'verifyUserConsent']], function () {
     Route::get('/export/time-volunteered', 'ExportController@exportTimeVolunteered');
     Route::get('/reporting/time-volunteered', 'ExportController@getTimeVolunteered');
     Route::get('/reporting/time-volunteered/{search}', 'ExportController@getTimeVolunteered');
-
-    // Auth API routes
-    Route::get('/api/events/{group}/', 'API\EventController');
+    
 });
 
 Route::get('/party/invite/{code}', 'PartyController@confirmCodeInvite');
@@ -300,21 +311,23 @@ Route::get('/party/stats/{id}/wide', function ($id) {
     return App\Http\Controllers\PartyController::stats($id);
 });
 
-Route::get('markAsRead/{id}', function ($id) {
-    auth()->user()->unReadNotifications->where('id', $id)->markAsRead();
+Route::get('markAsRead/{id?}', function ($id = NULL) {
+    $notifications = auth()->user()->unReadNotifications;
+
+    if ($id) {
+        $notifications = $notifications->where('id', $id);
+    }
+
+    $notifications->markAsRead();
 
     return redirect()->back();
 })->name('markAsRead');
-
-Route::get('/notifications/{notification_id}/', 'NotificationController');
-Route::get('/test/discourse/notifications', 'DiscourseNotificationController');
 
 Route::get('/set-lang/{locale}', 'LocaleController@setLang');
 
 Route::get('/set-lang/{locale}', 'LocaleController@setLang');
 
 Route::post('/set-cookie', 'InformationAlertCookieController');
-
 
 Route::get('/test/check-auth', function () {
     return new \App\Services\CheckAuthService;

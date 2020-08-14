@@ -2,25 +2,30 @@
 @section('content')
 <section class="groups">
   <div class="container">
+
+      @if (\Session::has('success'))
+          <div class="alert alert-success">
+              {!! \Session::get('success') !!}
+          </div>
+      @endif
+      @if (\Session::has('warning'))
+          <div class="alert alert-warning">
+              {!! \Session::get('warning') !!}
+          </div>
+      @endif
+
     <div class="row">
       <div class="col">
-        <div class="d-flex justify-content-between align-content-center">
-          <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{{ route('dashboard') }}}">FIXOMETER</a></li>
-                <li class="breadcrumb-item"><a href="{{{ route('events') }}}">@lang('events.events')</a></li>
-                <li class="breadcrumb-item"><a href="/party/view/{{ $formdata->id }}">{{ str_limit($formdata->venue, 20, '...') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">@lang('events.edit_event')</li>
-            </ol>
-          </nav>
-        </div>
+        <h1 class="mb-30 mr-30">
+            Editing <a style="color:black; text-decoration:underline" href="/party/view/{{ $formdata->id }}">{{ $formdata->venue }}</a>
+        </h1>
       </div>
     </div>
 
     <div class="row justify-content-center">
       <div class="col-lg-12">
         @if(isset($response))
-          @php( FixometerHelper::printResponse($response) )
+          @php( FixometerHelper::printResponse($response, false) )
         @endif
 
         <ul class="nav nav-tabs">
@@ -46,7 +51,6 @@
               <div class="row">
                 <div class="col-lg-12">
                   <div class="form-group__offset">
-                  <h4>@lang('events.edit_event')</h4>
                   <!-- <p>@lang('events.edit_event_content')</p>-->
                   </div>
                 </div>
@@ -58,27 +62,42 @@
 
                 <div class="row">
                   <div class="col-lg-6">
-                    <div class="form-group form-group__offset">
-                      <label for="event_name">@lang('events.field_event_name'):</label>
-                      <input type="text" class="form-control field" id="event_name" name="venue" value="{{ $formdata->venue }}" placeholder="@lang('events.field_event_name_helper')">
-                    </div>
+                        <div class="row">
+                            <div class="col-lg-7">
+                                <div class="form-group">
+                                    <label for="event_name">@lang('events.field_event_name'):</label>
+                                    <input type="text" class="form-control field" id="event_name" name="venue" value="{{ $formdata->venue }}" placeholder="@lang('events.field_event_name_helper')">
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="form-check" id="online-checkbox-group">
+                                    <label class="form-check-label">Online event?
+                                        <input id="online" type="checkbox" value="1" name="online" @if ( $formdata->online == 1) checked @endif class="form-check-input" style="position:relative;top:2px">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                  @if ( ( FixometerHelper::hasRole($user, 'Host') && count($user_groups) > 1 ) || FixometerHelper::hasRole($user, 'Administrator') )
-                  <div class="form-group form-group__offset">
+                    @if ( $userInChargeOfMultipleGroups )
+                        <div class="row">
+                      <div class="col-lg-7">
+                        <div class="form-group">
                       <label for="event_group">@lang('events.field_event_group'):</label>
                       <div class="form-control form-control__select">
                         <select name="group" id="event_group" class="field field select2" required>
                           <option></option>
-                          @foreach($group_list as $group)
-                            @if( FixometerHelper::hasRole($user, 'Administrator') || in_array($group->id, $user_groups) )
-                              <option value="<?php echo $group->id; ?>" <?php echo($group->id == $formdata->group ? 'selected' : ''); ?>><?php echo $group->name; ?></option>
+                          <?php $isAdmin = FixometerHelper::hasRole($user, 'Administrator'); ?>
+                          @foreach($allGroups as $group)
+                              @if( $isAdmin || $user_groups->pluck('idgroups')->contains($group->idgroups) )
+                              <option value="<?php echo $group->idgroups; ?>" <?php echo($group->idgroups == $formdata->group ? 'selected' : ''); ?>><?php echo $group->name; ?></option>
                             @endif
                           @endforeach
                         </select>
                       </div>
+                      </div></div>
                   </div>
                   @else
-                    <input type="hidden" name="group" value="{{ $user_groups[0] }}">
+                    <input type="hidden" name="group" value="{{ $user_groups[0]->idgroups }}">
                   @endif
 
                   <div class="form-group">
@@ -103,7 +122,7 @@
                       <div class="col-lg-7">
                            <div class="form-group">
                         <label for="field_event_time">@lang('events.field_event_time'):</label>
-                        <div class="row row-compressed">
+                        <div class="row">
 
                           <div class="col-6">
                             <input type="time" id="start-time" name="start" class="form-control field" value="{{ date('H:i', strtotime($formdata->start)) }}">
@@ -118,7 +137,7 @@
                       </div>
                       <div class="col-12">
 
-                          <div class="row row-compressed">
+                          <div class="row">
                               <div class="col-md-7">
                                 <div class="form-group">
                                   <label for="autocomplete">@lang('events.field_event_venue'):</label>
@@ -145,7 +164,7 @@
                       </div>
                     </div>
 
-                    @if( FixometerHelper::hasRole(Auth::user(), 'Administrator') && is_null($formdata->wordpress_post_id) )
+                    @if( FixometerHelper::userCanApproveEvent($formdata->id) && is_null($formdata->wordpress_post_id) )
                     <div class="form-group">
                       <div class="row">
                         <div class="col-lg-7">
@@ -171,18 +190,19 @@
                 </div>
               </div>
 
-              <div class="d-flex flex-column flex-lg-row align-items-end justify-content-end">
-                @if( is_null($formdata->wordpress_post_id) )
-                  <span class="button-group__notice text-right mb-20 mb-lg-auto mr-lg-20">
-                      @lang('events.before_submit_text')
-                  </span>
-                @endif
-
-                <button type="submit" name="button" class="btn btn-primary btn-block btn-create float-right" id="create-event">
-                  @lang('events.save_event')
-                </button>
+              <div class="button-group row">
+                  <div class="offset-lg-3 col-lg-7 d-flex align-items-right justify-content-end text-right">
+                      @if( is_null($formdata->wordpress_post_id) )
+                        <span class="button-group__notice text-right">@lang('events.before_submit_text')</span>
+                      @endif
+                  </div>
+                  <div class="col-lg-2 d-flex align-items-center justify-content-end">
+                      <input type="submit" class="btn btn-primary" id="create-event" value="@lang('events.save_event')">
+                  </div>
               </div>
+
             </form>
+
           </div>
 
           <div class="tab-pane" id="photos">

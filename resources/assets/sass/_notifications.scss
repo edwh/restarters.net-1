@@ -1,19 +1,25 @@
 .notifications {
-    background-color: #FFF;
-    position: fixed;
-    right: 0;
+    position: absolute;
+    right: 200px;
     top: 0;
-    padding-top: 62px;
+    padding-top: 100px;
     width: 350px;
-    height: 100%;
     height: 100vh;
     z-index: 900;
-    box-shadow:-2px 5px 5px rgba(0, 0, 0, 0.17);
+    background-color: #f5f7fa;
+    @include media-breakpoint-down(md) {
+        right: 0;
+    }
+}
 
+.notifications,
+.notifications-page {
     &__scroll {
         overflow-y: auto;
         height: 100%;
         width: 100% ;
+        box-shadow: -2px 5px 5px rgba(0, 0, 0, 0.17);
+        background-color: #f5f7fa;
     }
 
     &__inner {
@@ -66,7 +72,8 @@
         padding-bottom: 10px;
         background-repeat: no-repeat;
         background-position: 20px 20px;
-        border-radius: 3px;
+        border-radius: 0;
+        border-color: $brand;
 
         &.status-read {
             background-color: #FFEED7;
@@ -111,18 +118,20 @@
         }
     }
 
-    }
+}
 
-    .navbar-laravel .badge-talk-notifications {
-        background-color : #ffbe5f;
-    }
+.badge-group .badge-talk-notifications {
+    background-color : #ffbe5f;
+}
 
-    .navbar-laravel .badge-no-notifications {
-         background-color : #ccc;
-    }
+.badge-group .badge-no-notifications {
+    background-color : #ccc;
+    color: white;
+}
 
-    .navbar-laravel .badge-no-notifications:hover,
-    .navbar-laravel .badge-no-notifications:focus,
-    .navbar-laravel .badge-no-notifications:active {
-       background-color : #7e7e7e;
-    }
+.badge-group .badge-no-notifications:hover,
+.badge-group .badge-no-notifications:focus,
+.badge-group .badge-no-notifications:active {
+    background-color : #7e7e7e;
+    color: white;
+}

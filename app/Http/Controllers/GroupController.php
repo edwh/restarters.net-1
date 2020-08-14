@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Device;
 use App\Events\ApproveGroup;
 use App\Events\EditGroup;
+use App\Events\UserFollowedGroup;
 use App\Group;
+use App\GroupNetwork;
 use App\GroupTags;
 use App\GrouptagsGroups;
 use App\Helpers\FootprintRatioCalculator;
@@ -39,62 +41,83 @@ class GroupController extends Controller
         $this->EmissionRatio = $footprintRatioCalculator->calculateRatio();
     }
 
-    public function index(Request $request)
+    public function index($all = false)
     {
+        //Get current logged in user
         $user = Auth::user();
 
-        // All groups only
-        $groupsQuery = $this->filterGroups($request);
+        $groups = null;
 
-        $groups_count = $groupsQuery->count();
-        $groups = $groupsQuery->paginate(env('PAGINATE'));
+        if ($all) {
 
-        //Look for groups where user ID exists in pivot table
-        $your_groups_uniques = UserGroups::where('user', auth()->id())->pluck('group')
-        ->toArray();
+            // All groups only
+            $groupsQuery = Group::orderBy('name', 'ASC');
+            $groups = $groupsQuery->paginate(env('PAGINATE'));
+            $groups_count = $groupsQuery->count();
 
-        $sort_direction = request('sort_direction');
-        $sort_column = request('sort_column');
+            //Get all group tags
+            $all_group_tags = GroupTags::all();
+            $networks = Network::all();
 
-        //Look for groups where user ID exists in pivot table
-        $your_groups = Group::with('allRestarters', 'parties', 'groupImage.image')
-        ->join('users_groups', 'users_groups.group', '=', 'groups.idgroups')
-        ->join('events', 'events.group', '=', 'groups.idgroups')
-        ->where('users_groups.user', $user->id);
+            //Look for groups where user ID exists in pivot table
+            $your_groups_uniques = UserGroups::where('user', auth()->id())->pluck('group')->toArray();
 
-        if ( ! empty($sort_direction) && ! empty($sort_column)) {
-            $your_groups = $your_groups->whereDate('events.event_date', '>=', date('Y-m-d'))
-            ->orderBy('events.event_date', $sort_direction);
+            return view('group.index', [
+                'your_groups' => null,
+                'your_groups_uniques' => $your_groups_uniques,
+                'groups_near_you' => null,
+                'groups' => $groups,
+                'your_area' => null,
+                'all' => $all,
+                'all_group_tags' => $all_group_tags,
+                'networks' => $networks,
+                'sort_direction' => 'ASC',
+                'sort_column' => 'name',
+                'groups_count' => $groups_count,
+            ]);
         }
 
-        $your_groups = $your_groups->orderBy('groups.name', 'ASC')
-        ->groupBy('groups.idgroups')
-        ->select('groups.*')
-        ->get();
+        $sort_direction = request()->input('sort_direction');
+        $sort_column = request()->input('sort_column');
+
+        //Look for groups where user ID exists in pivot table
+        $your_groups = Group::join('users_groups', 'users_groups.group', '=', 'groups.idgroups')
+            ->leftJoin('events', 'events.group', '=', 'groups.idgroups')
+            ->where('users_groups.user', $user->id);
+
+            if ( ! empty($sort_direction) && ! empty($sort_column)) {
+              $your_groups = $your_groups->whereDate('events.event_date', '>=', date('Y-m-d'))
+                    ->orderBy('events.event_date', $sort_direction);
+            }
+
+            $your_groups = $your_groups->orderBy('groups.name', 'ASC')
+            ->groupBy('groups.idgroups')
+            ->select('groups.*')
+            ->get();
 
         //Make sure we don't show the same groups in nearest to you
         $your_groups_uniques = $your_groups->pluck('idgroups')->toArray();
 
         //Assuming we have valid lat and long values, let's see what is nearest
         if ( ! is_null($user->latitude) && ! is_null($user->longitude)) {
-            $groups_near_you = Group::with('allRestarters', 'parties', 'groupImage.image')
-            ->select(DB::raw('`groups`.*, ( 6371 * acos( cos( radians('.$user->latitude.') ) * cos( radians( groups.latitude ) ) * cos( radians( groups.longitude ) - radians('.$user->longitude.') ) + sin( radians('.$user->latitude.') ) * sin( radians( groups.latitude ) ) ) ) AS distance'))
-            ->having('distance', '<=', 150)
-            ->join('events', 'events.group', '=', 'groups.idgroups')
-            ->whereNotIn('groups.idgroups', $your_groups_uniques);
+          $groups_near_you = Group::select(DB::raw('`groups`.*, ( 6371 * acos( cos( radians('.$user->latitude.') ) * cos( radians( groups.latitude ) ) * cos( radians( groups.longitude ) - radians('.$user->longitude.') ) + sin( radians('.$user->latitude.') ) * sin( radians( groups.latitude ) ) ) ) AS distance'))
+              ->having('distance', '<=', 150)
+              ->join('events', 'events.group', '=', 'groups.idgroups')
+              ->whereNotIn('groups.idgroups', $your_groups_uniques);
 
-            if ( ! empty($sort_direction) && ! empty($sort_column)) {
-                $groups_near_you = $groups_near_you->whereDate('events.event_date', '>=', date('Y-m-d'))
-                ->orderBy('events.event_date', $sort_direction);
-            }
+          if ( ! empty($sort_direction) && ! empty($sort_column)) {
+            $groups_near_you = $groups_near_you->whereDate('events.event_date', '>=', date('Y-m-d'))
+                  ->orderBy('events.event_date', $sort_direction);
+          }
 
-            $groups_near_you = $groups_near_you->groupBy('groups.idgroups')
-            ->orderBy('distance', 'ASC')
-            ->orderBy('distance', 'ASC')
-            ->take(10)
-            ->get();
+          $groups_near_you = $groups_near_you->groupBy('groups.idgroups')
+              ->orderBy('distance', 'ASC')
+              ->orderBy('distance', 'ASC')
+              ->take(10)
+              ->get();
+
         } else {
-            $groups_near_you = collect([]);
+            $groups_near_you = null;
         }
 
         return view('group.index', [
@@ -102,17 +125,10 @@ class GroupController extends Controller
             'your_groups_uniques' => $your_groups_uniques,
             'groups_near_you' => $groups_near_you,
             'groups' => $groups,
-            'groups_count' => $groups_count,
             'your_area' => $user->location,
             'all' => $all,
-            'all_group_tags' => GroupTags::all(),
-            'sort_direction' => $sort_direction ? $sort_direction : 'ASC',
-            'sort_column' => $sort_column ? $sort_column : 'name',
-            'name' => $request->input('name'),
-            'location' => $request->input('location'),
-            'selected_country' => $request->input('country'),
-            'selected_tags' => $request->input('tags'),
-            'formHash' => $request->input('formHash')
+            'sort_direction' => $sort_direction,
+            'sort_column' => $sort_column,
         ]);
     }
 
@@ -154,75 +170,111 @@ class GroupController extends Controller
     }
 
     /**
-     * @author Christopher Kelker - @date 26-03-2019
-     * @editor  Christopher Kelker - @date 13-02-2020
+     * [search description]
+     * All groups only
+     *
+     * @author Christopher Kelker - @date 2019-03-26
+     * @editor  Christopher Kelker
+     * @version 1.0.0
      * @param   Request     $request
-     * @return  Collection
+     * @return  [type]
      */
-     public function filterGroups(Request $request)
-     {
-         // variables
-         $groups = Group::with('allRestarters', 'parties', 'groupImage.image');
+    public function search(Request $request)
+    {
+        // variables
+        $groups = new Group;
 
-         $sort_direction = $request->input('sort_direction');
-         $sort_column = $request->input('sort_column');
+        //Get all group tags
+        $all_group_tags = GroupTags::all();
+        $networks = Network::all();
 
-         $groups->when($request->input('name'), function ($query, $name){
-           return $query->where('name', 'like', "%{$name}%");
-         });
+        $sort_direction = $request->input('sort_direction');
+        $sort_column = $request->input('sort_column');
 
-         $groups->when($request->input('location'), function ($query, $location){
-           return $query->where(function ($query) use ($location) {
-               $query->where('groups.location', 'like', "%{$location}%")
-               ->orWhere('groups.area', 'like', "%{$location}%");
-           });
-         });
+        if ( ! empty($request->input('name'))) {
+            $groups = $groups->where('name', 'like', '%'.$request->input('name').'%');
+        }
 
-         $groups->when($request->input('country'), function ($query, $country){
-           return $query->where('country', $country);
-         });
+        if ( ! empty($request->input('location'))) {
+            $groups = $groups->where(function ($query) use ($request){
+                  $query->where('groups.location', 'like', '%'.$request->input('location').'%')
+                        ->orWhere('groups.area', 'like', '%'.$request->input('location').'%');
+              });
+        }
 
-         $groups->when($request->input('tags'), function ($query, $tags){
-           return $query->whereIn('idgroups',
-             GrouptagsGroups::whereIn('group_tag', $tags)->pluck('group')
-           );
-         });
+        if ( ! empty($request->input('country'))) {
+            $groups = $groups->where('country', $request->input('country'));
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'name') {
-             $groups = $groups->orderBy('name', $sort_direction);
-         }
+        if ( ! empty($request->input('tags'))) {
+            $groups = $groups->whereIn('idgroups', GrouptagsGroups::whereIn('group_tag', $request->input('tags'))->pluck('group'));
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'distance') {
-             $groups = $groups->orderBy('location', $sort_direction);
-         }
+        if ( ! empty($request->input('network'))) {
+            $groups = $groups->whereIn('idgroups', GroupNetwork::where('network_id', $request->input('network'))->pluck('group_id'));
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'hosts') {
-             $groups = $groups->with('allHosts')
-             ->orderBy('all_hosts_count', $sort_direction);
-         }
+        if ( ! empty($sort_column) && $sort_column == 'name') {
+            $groups = $groups->orderBy('name', $sort_direction);
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'upcoming_event') {
-             $groups = $groups->leftJoin('events', 'events.group', '=', 'groups.idgroups')
-             ->whereDate('events.event_date', '>=', date('Y-m-d'))
-             ->orderBy('events.event_date', $sort_direction)
-             ->select('groups.*')
-             ->groupBy('groups.idgroups');
-         }
+        if ( ! empty($sort_column) && $sort_column == 'distance') {
+            $groups = $groups->orderBy('location', $sort_direction);
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'restarters') {
-             $groups = $groups->with('allHosts')
-             ->orderBy('all_restarters_count', $sort_direction);
-         }
+        if ( ! empty($sort_column) && $sort_column == 'hosts') {
+            $groups = $groups->with('allHosts')
+                              ->with('allRestarters')
+                              ->orderBy('all_hosts_count', $sort_direction);
+        }
 
-         if ( ! empty($sort_column) && $sort_column == 'created_at') {
-             $groups = $groups->orderBy('created_at', $sort_direction)
-             ->whereNotNull('created_at');
-         }
+        if ( ! empty($sort_column) && $sort_column == 'upcoming_event') {
+          $groups = $groups->leftJoin('events', 'events.group', '=', 'groups.idgroups')
+                            ->whereDate('events.event_date', '>=', date('Y-m-d'))
+                            ->orderBy('events.event_date', $sort_direction)
+                            ->select('groups.*')
+                            ->groupBy('groups.idgroups');
+        }
 
-         return $groups;
-     }
+        if ( ! empty($sort_column) && $sort_column == 'restarters') {
+            $groups = $groups->with('allHosts')
+                              ->with('allRestarters')
+                              ->orderBy('all_restarters_count', $sort_direction);
+        }
 
-    public function create(Request $request)
+        if ( ! empty($sort_column) && $sort_column == 'created_at') {
+            $groups = $groups->orderBy('created_at', $sort_direction)
+                                ->whereNotNull('created_at');
+        }
+
+        $groups = $groups->paginate(env('PAGINATE'));
+        $groups_count = $groups->total();
+
+        //Look for groups where user ID exists in pivot table
+        $your_groups_uniques = UserGroups::where('user', auth()->id())->pluck('group')->toArray();
+
+        return view('group.index', [
+            'your_groups' => null,
+            'groups_near_you' => null,
+            'groups' => $groups,
+            'networks' => $networks,
+            'your_area' => null,
+            'all' => true,
+            'all_group_tags' => $all_group_tags,
+            'your_groups_uniques' => $your_groups_uniques,
+            'name' => $request->input('name'),
+            'location' => $request->input('location'),
+            'selected_country' => $request->input('country'),
+            'selected_network' => $request->input('network'),
+            'selected_tags' => $request->input('tags'),
+            'sort',
+            'sort_direction' => $sort_direction,
+            'sort_column' => $sort_column,
+            'groups_count' => $groups_count,
+        ]);
+    }
+
+    public function create(Request $request, $networkId = null)
     {
         $user = User::find(Auth::id());
 
@@ -244,7 +296,7 @@ class GroupController extends Controller
             if (empty($name)) {
                 $error['name'] = 'Please input a name.';
             }
-
+            
             if ( ! empty($location)) {
                 $lat_long = FixometerHelper::getLatLongFromCityCountry($location);
 
@@ -266,15 +318,8 @@ class GroupController extends Controller
                 $country = null;
             }
 
-            $discourse_slug = null;
-            if (request()->has('discourse_slug')) {
-              $discourse_slug = request('discourse_slug');
-            }
-
             if (empty($error)) {
-                $data = array(
-                    'name' => $name,
-                    'discourse_slug' => $discourse_slug,
+                $data = array('name' => $name,
                     'website' => $website,
                     // 'frequency'     => $freq,
                     'location' => $location,
@@ -291,10 +336,6 @@ class GroupController extends Controller
                 $network = Network::find(session()->get('repair_network'));
                 $network->addGroup($group);
 
-                if ($discourse_slug) {
-                    $Group->createOrUpdateDiscourseGroup();
-                }
-
                 if (is_numeric($idGroup) && $idGroup !== false) {
                     $idGroup = Group::find($idGroup);
                     $lat1 = $idGroup->latitude;
@@ -303,11 +344,6 @@ class GroupController extends Controller
                     $idGroup = $idGroup->idgroups;
 
                     $response['success'] = 'Group created correctly.';
-
-                    if (isset($_FILES) && ! empty($_FILES)) {
-                        $file = new FixometerFile;
-                        $group_avatar = $file->upload('file', 'image', $idGroup, env('TBL_GROUPS'), false, true);
-                    }
 
                     //Associate current logged in user as a host
                     UserGroups::create([
@@ -323,6 +359,11 @@ class GroupController extends Controller
                         'group_name' => $name,
                         'group_url' => url('/group/edit/'.$idGroup),
                     ]));
+
+                    if (isset($_FILES) && ! empty($_FILES)) {
+                        $file = new FixometerFile;
+                        $file->upload('file', 'image', $idGroup, env('TBL_GROUPS'), false, true);
+                    }
                 } else {
                     $response['danger'] = 'Group could <strong>not</strong> be created. Something went wrong with the database.';
                 }
@@ -354,12 +395,14 @@ class GroupController extends Controller
                 'response' => $response,
                 'error' => $error,
                 'udata' => $udata,
+                'selectedNetworkId' => $networkId,
             ]);
         }
 
         return view('group.create', [
             'title' => 'New Group',
             'gmaps' => true,
+            'selectedNetworkId' => $networkId,
         ]);
     }
 
@@ -513,6 +556,7 @@ class GroupController extends Controller
         })->first());
 
         $is_host_of_group = FixometerHelper::userHasEditGroupPermission($groupid, $user->id);
+        $isCoordinatorForGroup = $user->isCoordinatorForGroup($group);
 
         $user_groups = UserGroups::where('user', Auth::user()->id)->count();
         $view_group = Group::find($groupid);
@@ -559,6 +603,7 @@ class GroupController extends Controller
             'EmissionRatio' => $this->EmissionRatio,
             'in_group' => $in_group,
             'is_host_of_group' => $is_host_of_group,
+            'isCoordinatorForGroup' => $isCoordinatorForGroup,
             'user_groups' => $user_groups,
             'view_group' => $view_group,
             'group_id' => $groupid,
@@ -689,10 +734,15 @@ class GroupController extends Controller
         $Group = new Group;
         $File = new FixometerFile;
 
+        $group = Group::find($id);
         $is_host_of_group = FixometerHelper::userHasEditGroupPermission($id, $user->id);
-        if ( ! FixometerHelper::hasRole($user, 'Administrator') && ! $is_host_of_group) {
-            return redirect('/user/forbidden');
+        $isCoordinatorForGroup = $user->isCoordinatorForGroup($group);
+
+        if ( ! FixometerHelper::hasRole($user, 'Administrator') && ! $is_host_of_group && ! $isCoordinatorForGroup) {
+            abort(403);
         }
+
+        $networks = Network::all();
 
         if ($request->isMethod('post') && ! empty($request->post())) {
             $data = $request->post();
@@ -710,12 +760,13 @@ class GroupController extends Controller
                   $images = $File->findImages(env('TBL_GROUPS'), $id);
                   $tags = GroupTags::all();
                   $group_tags = GrouptagsGroups::where('group', $id)->pluck('group_tag')->toArray();
+                  $group_networks = $group->networks->pluck('id')->toArray();
 
                   if ( ! isset($images)) {
                       $images = null;
                   }
 
-                  return view('group.edit-group', [
+                  return view('group.edit', [
                       'response' => $response,
                       'gmaps' => true,
                       'title' => 'Edit Group '.$group->name,
@@ -724,9 +775,11 @@ class GroupController extends Controller
                       'images' => $images,
                       'tags' => $tags,
                       'group_tags' => $group_tags,
+                      'networks' => $networks,
+                      'group_networks' => $group_networks,
                       'audits' => $group->audits,
                   ]);
-                } // TODO
+                }
 
                 $latitude = $lat_long[0];
                 $longitude = $lat_long[1];
@@ -748,14 +801,8 @@ class GroupController extends Controller
                 //return redirect()->back()->with('error', 'Could not find group location - please try again!');
             }
 
-            $discourse_slug = null;
-            if (request()->has('discourse_slug')) {
-              $discourse_slug = request('discourse_slug');
-            }
-
             $update = array(
                 'name' => $data['name'],
-                'discourse_slug' => $discourse_slug,
                 'website' => $data['website'],
                 'free_text' => $data['free_text'],
                 'location' => $data['location'],
@@ -764,7 +811,7 @@ class GroupController extends Controller
                 'country' => $country,
             );
 
-            if (FixometerHelper::hasRole($user, 'Administrator')) {
+            if ($user->hasRole('Administrator') || $user->hasRole('NetworkCoordinator')) {
                 $update['area'] = $data['area'];
             }
 
@@ -776,6 +823,12 @@ class GroupController extends Controller
                 } else {
                     $Group->find($id)->group_tags()->sync([]);
                 }
+
+                if ( ! empty($request->input('group_networks'))) {
+                    Group::find($id)->networks()->sync($request->input('group_networks'));
+                } else {
+                    Group::find($id)->networks()->sync([]);
+                }
             }
 
             if ( ! $u) {
@@ -783,10 +836,6 @@ class GroupController extends Controller
                 echo $response['danger'];
             } else {
                 $response['success'] = 'Group updated!';
-
-                if ($discourse_slug) {
-                    Group::findOrFail($id)->createOrUpdateDiscourseGroup();
-                }
 
                 if (isset($_FILES['file']) && ! empty($_FILES['file']) && $_FILES['file']['error'] != 4) {
                     $existing_image = FixometerHelper::hasImage($id, 'groups', true);
@@ -847,10 +896,11 @@ class GroupController extends Controller
 
         $tags = GroupTags::all();
         $group_tags = GrouptagsGroups::where('group', $id)->pluck('group_tag')->toArray();
+        $group_networks = Group::find($id)->networks->pluck('id')->toArray();
 
         compact($audits = $Group->findOrFail($id)->audits);
 
-        return view('group.edit-group', [
+        return view('group.edit', [
             'response' => $response,
             'gmaps' => true,
             'title' => 'Edit Group '.$group->name,
@@ -859,58 +909,10 @@ class GroupController extends Controller
             'images' => $images,
             'tags' => $tags,
             'group_tags' => $group_tags,
+            'networks' => $networks,
+            'group_networks' => $group_networks,
             'audits' => $audits,
         ]);
-    }
-
-    public function updateGroupInWordpress($id, $data, $group_avatar, $latitude, $longitude)
-    {
-        // TODO: host.  Groups don't just have one host.  Is host
-        // displayed on the front-end anywhere?
-        // TODO: receiving area field from posted data.  It's currently not in the interface.
-        $group = Group::where('idgroups', $id)->first();
-
-        $custom_fields = array(
-            array('key' => 'group_city',            'value' => $group->area),
-            //                                    array('key' => 'group_host',            'value' => $Host->hostname),
-            array('key' => 'group_website',         'value' => $data['website']),
-            //array('key' => 'group_hostavatarurl',   'value' => env('UPLOADS_URL') . 'mid_' . $Host->path),
-            array('key' => 'group_hash',            'value' => $id),
-            array('key' => 'group_avatar_url',      'value' => $group_avatar),
-            array('key' => 'group_latitude',        'value' => $latitude),
-            array('key' => 'group_longitude',       'value' => $longitude),
-        );
-
-        /** Start WP XML-RPC **/
-        $wpClient = new \HieuLe\WordpressXmlrpcClient\WordpressClient();
-        $wpClient->setCredentials(env('WP_XMLRPC_ENDPOINT'), env('WP_XMLRPC_USER'), env('WP_XMLRPC_PSWD'));
-
-        $content = array(
-            'post_type' => 'group',
-            'post_title' => $data['name'],
-            'post_content' => $data['free_text'],
-            'custom_fields' => $custom_fields,
-        );
-
-        if ( ! empty($group->wordpress_post_id)) {
-            // We need to remap all custom fields because they all get unique IDs across all posts, so they don't get mixed up.
-            $existingPost = $wpClient->getPost($group->wordpress_post_id);
-
-            foreach ($existingPost['custom_fields'] as $i => $field) {
-                foreach ($custom_fields as $k => $set_field) {
-                    if ($field['key'] == $set_field['key']) {
-                        $custom_fields[$k]['id'] = $field['id'];
-                    }
-                }
-            }
-
-            $content['custom_fields'] = $custom_fields;
-            $wpClient->editPost($group->wordpress_post_id, $content);
-        } else {
-            $wpid = $wpClient->newPost($data['name'], $data['free_text'], $content);
-            $group->wordpress_post_id = $wpid;
-            $group->save();
-        }
     }
 
     public function delete($id)
@@ -1001,8 +1003,7 @@ class GroupController extends Controller
 
     public function getJoinGroup($group_id)
     {
-        $user = Auth::user();
-        $user_id = $user->id;
+        $user_id = Auth::id();
         $alreadyInGroup = UserGroups::where('group', $group_id)
         ->where('user', $user_id)
         ->where('status', 1)
@@ -1023,19 +1024,12 @@ class GroupController extends Controller
                 'role' => 4,
             ]);
 
-
-            // A new User has joined your group
+            $user = Auth::user();
             $group = Group::find($group_id);
 
-            if (! $user->username) {
-                $user->generateAndSetUsername();
-                $user->save();
-            }
+            event(new UserFollowedGroup($user, $group));
 
-            if ($group->discourse_slug) {
-                $group->addUsersToDiscourseGroup($user->username);
-            }
-
+            // A new User has joined your group
             $groupHostLinks = UserGroups::where('group', $group->idgroups)->where('role', 3)->get();
 
             foreach ($groupHostLinks as $groupHostLink) {
@@ -1049,13 +1043,14 @@ class GroupController extends Controller
                 Notification::send($host, new NewGroupMember($arr, $host));
             }
 
-            return redirect()->back()
-            ->with('success', "You are now following {$group->name}! Space for message or notifications also in Group near you and All groups.")
-            ->with('formHash', '#your-groups-pane');
+            return redirect()
+                    ->back()
+                    ->with('success', "You are now following {$group->name}!");
+
         } catch (\Exception $e) {
-            return redirect()->back()
-            ->with('warning', "Failed to follow this group")
-            ->with('formHash', '#your-groups-pane');
+            $response['danger'] = 'Failed to follow this group';
+
+            return redirect()->back()->with('response', $response)->with('warning', 'Failed to follow this group');
         }
     }
 

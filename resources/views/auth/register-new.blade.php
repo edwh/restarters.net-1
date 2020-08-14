@@ -31,19 +31,19 @@
           <input name="invite" type="hidden" value="{{ $invite }}">
         @endif
 
-        <aside class="registration__step registration__step--active" id="step-1" aria-labelledby="step-1-form-label">
+        <aside class="panel registration__step registration__step--active" id="step-1" aria-labelledby="step-1-form-label">
             <h3 id="step-1-form-label"> @lang('registration.reg-step-1-heading')</h3>
             <p class="registration__status">@lang('registration.step-1')</p>
 
             <legend id="step-1-form-label">@lang('registration.reg-step-1-1')</legend>
             @foreach( FixometerHelper::skillCategories() as $key => $skill_category )
               <br>
-              <h5>{{{ $skill_category }}}</h5>
+              <h5>@lang($skill_category)</h5>
               <div class="row row-compressed">
                   @foreach ($skills[$key] as $skill)
                     <div class="col-6 col-lg-3">
                         <input @if( is_array(old('skills')) && in_array($skill->id, old('skills')) ) checked @endif type="checkbox" name="skills[]" id="skill-{{ $skill->id }}" class="styled-checkbox" value="{{ $skill->id }}">
-                        <label for="skill-{{ $skill->id }}" class="btn btn-checkbox registration-skill"><span>{{ $skill->skill_name }}</span></label>
+                        <label for="skill-{{ $skill->id }}" class="btn btn-checkbox"><span>@lang($skill->skill_name)</span></label>
                     </div>
                   @endforeach
               </div>
@@ -54,7 +54,7 @@
 
         </aside>
 
-        <aside class="registration__step" id="step-2" aria-labelledby="step-2-form-label">
+        <aside class="panel registration__step" id="step-2" aria-labelledby="step-2-form-label">
 
             <h3 id="step-2-form-label">@lang('registration.reg-step-2-heading')</h3>
             <p class="registration__status">@lang('registration.step-2')</p>
@@ -175,20 +175,22 @@
 
         </aside>
 
-        <aside class="registration__step" id="step-3" aria-labelledby="step-3-form-label">
+        <aside class="panel registration__step" id="step-3" aria-labelledby="step-3-form-label">
 
             <h3 id="step-3-form-label">@lang('registration.reg-step-3-heading')</h3>
             <p class="registration__status">@lang('registration.step-3')</p>
 
             <div class="registration__offset">
                 <fieldset>
-                    <legend>@lang('registration.reg-step-3-2b')</legend>
+                    <legend @if(! $showNewsletterSignup) class="d-none" @endif>
+                        @lang('registration.reg-step-3-2b')
+                    </legend>
                     <legend>@lang('registration.reg-step-3-1a')</legend>
-                    <div class="form-check d-flex align-items-center justify-content-start">
+                    <div class="form-check align-items-center justify-content-start @if($showNewsletterSignup) d-flex @else d-none @endif">
                         <input class="form-check-input" type="checkbox" name="newsletter" id="newsletter" value="1" @if( old('newsletter') == 1 ) checked @endif>
                         <label class="form-check-label" for="newsletter">
-                        @lang('registration.reg-step-3-label1')
-                    </label>
+                            @lang('registration.reg-step-3-label1')
+                        </label>
                     </div>
                     <div class="form-check d-flex align-items-center justify-content-start">
                         <input class="form-check-input" type="checkbox" name="invites" id="invites" value="1" @if( old('invites') == 1 ) checked @endif>
@@ -210,7 +212,7 @@
 
         </aside>
 
-        <aside class="registration__step" id="step-4" aria-labelledby="step-4-form-label">
+        <aside class="panel registration__step" id="step-4" aria-labelledby="step-4-form-label">
 
             <h3 id="step-4-form-label">@lang('registration.reg-step-4-heading')</h3>
             <p class="registration__status">@lang('registration.step-4')</p>

@@ -1,11 +1,11 @@
 // API call to current site - check for notifications
 function ajaxSearchNotifications() {
   // $base_url = window.location.host;
-
-  $('.notification-menu-items').hide();
+  $notification_menu_items = $('.notification-menu-items');
+  $notification_menu_items.hide();
   $('.toggle-notifications-menu .bell-icon-active').hide();
 
-  $url = process.env.MIX_APP_URL + '/test/discourse/notifications';
+  $url = 'https://restarters.dev' + '/test/discourse/notifications';
 
   $.ajax({
     headers: {
@@ -33,13 +33,14 @@ function ajaxSearchNotifications() {
       if (Object.keys($notifications).length > 0) {
         console.log('Success: notifications found on Discourse.');
 
-        $('.notification-menu-items').css('display', '');
+        $notification_menu_items.css('display', '');
+        $notification_menu_items.empty();
         $('.toggle-notifications-menu .bell-icon-active').css('display', '');
 
         $.each($notifications, function(index, $notification) {
-          $('.notification-menu-items').append(
+          $notification_menu_items.append(
             $('<li>').append(
-              $('<a>').attr('href', process.env.MIX_APP_URL + '/notifications/' + $notification.id).text($notification.data.title)
+              $('<a>').attr('href', 'https://restarters.dev/notifications/' + $notification.id).text($notification.data.title)
             ).attr('class', 'notifcation-text')
           );
         });
@@ -48,4 +49,4 @@ function ajaxSearchNotifications() {
   });
 }
 
-ajaxSearchNotifications();
+//ajaxSearchNotifications();

@@ -55,12 +55,13 @@ window.onload = function() {
       }
     }
 
-    if (window.location.origin == process.env.MIX_WIKI_URL) {
+      // TODO: how to get this from .env?
+      if (window.location.origin == 'https://wiki.restarters.dev' || window.location.origin == 'https://wiki.restarters.net') {
       $('.wiki-nav-item').addClass('active');
 
-      $('.nav-tabs-block li a').removeClass('active');
+      $('.nav-tabs-block li.nav-item a.nav-link').removeClass('active');
 
-      $('.nav-tabs-block li a[href*="'+ window.location.pathname +'"]').each(function() {
+      $('.nav-tabs-block li.nav-item a.nav-link[href*="'+ window.location.pathname +'"]').each(function() {
         $(this).addClass('active');
       });
     }

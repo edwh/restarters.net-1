@@ -3,8 +3,11 @@
 namespace App;
 
 use App\Events\UserDeleted;
+use App\Events\UserUpdated;
 use App\Network;
 use App\UserGroups;
+use App\UsersPermissions;
+
 use DB;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -61,20 +64,11 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $dispatchesEvents = [
+        'updated' => UserUpdated::class,
         'deleted' => UserDeleted::class,
     ];
 
-    protected $appends = ['UserGroupsIDs'];
-
-    protected $with = ['userGroups'];
-
-
     public function role()
-    {
-        return $this->hasOne('App\Role', 'idroles', 'role');
-    }
-
-    public function userRole()
     {
         return $this->hasOne('App\Role', 'idroles', 'role');
     }
@@ -345,14 +339,15 @@ class User extends Authenticatable implements Auditable
         return $nameParts[0];
     }
 
+
     public function existsOnDiscourse()
     {
         try {
-            $discourseApiKey = env('DISCOURSE_APIKEY');
-            $discourseApiUser = env('DISCOURSE_APIUSER');
+            $client = app('discourse-client');
             $emailToSearchFor = trim($this->email);
-            $discourseQuery = sprintf('%s/admin/users/list/all.json?email=%s&api_key=%s&api_username=%s', env('DISCOURSE_URL'), $this->email, $discourseApiKey, $discourseApiUser);
-            $discourseResult = json_decode(file_get_contents($discourseQuery));
+            $endpoint = sprintf('/admin/users/list/all.json?email=%s', $emailToSearchFor);
+            $response = $client->request('GET', $endpoint);
+            $discourseResult = json_decode($response->getBody());
 
             return count($discourseResult) >= 1;
         } catch (\Exception $ex) {
@@ -364,7 +359,7 @@ class User extends Authenticatable implements Auditable
     /**
      * Convert the user's role to be a Host.
      *
-     * Currently, the only role that should be convertible to a Host is a Restarter.
+     * Currently, the only role that should be convertible to a Host is a Restarter.  Admins and NetworkCoordinators should not be downgraded, and if already a Host, no need to change it.
      */
     public function convertToHost()
     {
@@ -462,6 +457,20 @@ class User extends Authenticatable implements Auditable
         return false;
     }
 
+    public function hasPermission($permissionName)
+    {
+        $has_permission = UsersPermissions::join('permissions', 'permissions.idpermissions', '=', 'users_permissions.permission_id')
+                        ->where('users_permissions.user_id', $this->id)
+                        ->where('permissions.slug', $permissionName)
+                        ->first();
+
+        if (empty($has_permission)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function getTalkProfileUrl()
     {
         return env('DISCOURSE_URL').'/u/'.$this->username;
@@ -476,125 +485,48 @@ class User extends Authenticatable implements Auditable
         return ($network->include_in_zapier == true);
     }
 
-    public function hasLocationSet()
+    public function networks()
     {
-        return ! is_null($this->latitude) && ! is_null($this->longitude);
+        return $this->belongsToMany(Network::class, 'user_network', 'user_id', 'network_id');
     }
 
-    public function userGroups()
+    public function isCoordinatorOf($network)
     {
-        return $this->hasMany(UserGroups::class, 'user', 'id');
+        return $this->networks->contains($network);
     }
 
-    public function getUserGroupsIDsAttribute()
+    public function isCoordinatorForGroup($group)
     {
-        return $this->userGroups->pluck('group')->toArray();
-    }
-
-    public function getDiscourseEmailPreferencesAttribute()
-    {
-        $discourse_user = $this->getUserFromDiscourse();
-
-        if ( ! $discourse_user) {
-            return false;
+        foreach ($group->networks as $groupNetwork) {
+            foreach ($this->networks as $userNetwork) {
+                if ($groupNetwork->name == $userNetwork->name) {
+                    return true;
+                }
+            }
         }
 
-        $user_options = $discourse_user['user']['user_option'];
-
-        $email_options = [
-            'email_messages_level',
-            'email_level',
-            'digest_after_minutes',
-        ];
-
-        return array_filter($user_options, function ($user_option) use ($email_options) {
-            return in_array($user_option, $email_options);
-        }, ARRAY_FILTER_USE_KEY);
+        return false;
     }
 
-    public function updateDiscourseEmailPreferences(array $email_preference_options)
+    public function groupsInChargeOf()
     {
-        $client = app('discourse-client');
+        $groupsUserIsInChargeOf = collect([]);
 
-        // $placeholder = 'Dean_Claydon';
-        // $this->username
-
-        $response = $client->request('PUT', "/users/{$this->username}.json", [
-            'query' => $email_preference_options,
-        ]);
-
-        if ($response->getStatusCode() != 200 || $response->getReasonPhrase() != 'OK') {
-            return false;
+        if ($this->hasRole('Host')) {
+            $groupsUserIsInChargeOf = Group::join('users_groups', 'groups.idgroups', '=', 'users_groups.group')
+                                    ->where('user', $this->id)
+                                    ->where('role', 3)
+                                    ->get();
+        } else if ($this->hasRole('NetworkCoordinator')) {
+            foreach ($this->networks as $network) {
+                foreach ($network->groups as $group) {
+                    $groupsUserIsInChargeOf->push($group);
+                }
+            }
+        } else if ($this->hasRole('Administrator')) {
+            $groupsUserIsInChargeOf = Group::all();
         }
 
-        return true;
-    }
-
-    public function logoutOfDiscourse()
-    {
-        $discourse_user = $this->getUserFromDiscourse();
-
-        if ( ! $discourse_user) {
-            return;
-        }
-
-        $user_id = $discourse_user['user']['id'];
-
-        $client = app('discourse-client');
-
-        $response = $client->request('POST', "/admin/users/{$user_id}/log_out");
-
-        \Cookie::queue(\Cookie::forget('authenticated'));
-
-        \Cookie::queue(\Cookie::forget('has_cookie_notifications_set'));
-    }
-
-    public function getUserFromDiscourse()
-    {
-        $client = app('discourse-client');
-
-        $response = $client->request('GET', "/users/{$this->username}.json");
-
-        if ($response->getStatusCode() != 200 || $response->getReasonPhrase() != 'OK') {
-            return false;
-        }
-
-        $array = json_decode($response->getBody()->getContents(), true);
-
-        return $array;
-    }
-
-    public function createUserOnDiscourse(array $data)
-    {
-        $attempt_retrieval_of_user = $this->getUserFromDiscourse();
-
-
-        if ($attempt_retrieval_of_user) {
-            return $attempt_retrieval_of_user;
-        }
-
-        $client = app('discourse-client');
-
-        $response = $client->request('POST', '/users', [
-            'form_params' => [
-                'name' => isset($data['name']) ? $data['name'] : $this->name,
-                'email' => isset($data['email']) ? $data['email'] : $this->email,
-                'password' => \Hash::make(str_random(20)),
-                'username' => isset($data['username']) ? $data['username'] : $this->username,
-                'user_fields[1]' => '1',
-                'user_fields[2]' => '2',
-                'user_fields[3]' => '3',
-                'user_fields[4]' => '4',
-                'user_fields[5]' => '5',
-            ],
-        ]);
-
-        if ($response->getStatusCode() != 200 || $response->getReasonPhrase() != 'OK') {
-            return false;
-        }
-
-        $array = json_decode($response->getBody()->getContents(), true);
-
-        return $array;
+        return $groupsUserIsInChargeOf;
     }
 }

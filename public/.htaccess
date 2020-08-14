@@ -1,3 +1,9 @@
+<IfModule mod_headers.c>
+    SetEnvIf Origin "http(s)?://(www\.)?(therestartproject.org|wiki.restarters.net)$" AccessControlAllowOrigin=$0
+    Header add Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+    Header set Access-Control-Allow-Credentials true
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -18,15 +24,4 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-</IfModule>
-
-# Allow access to all subdomains
-<IfModule mod_headers.c>
-#   SetEnvIf Origin "^(.*\.rstrt\.org\.ar)$" ORIGIN_SUB_DOMAIN=$1
-#   Header set Access-Control-Allow-Origin "%{ORIGIN_SUB_DOMAIN}e" env=ORIGIN_S$
-#    Header set Access-Control-Allow-Credentials: true
-#   Header set Access-Control-Allow-Methods: "POST, GET"
-#    Header set Access-Control-Allow-Methods: "*"
-#   Header set Access-Control-Allow-Headers: "Origin, X-Requested-With, Content$
-#    Header set Access-Control-Allow-Headers: "Origin, X-Requested-With, Conten$
 </IfModule>

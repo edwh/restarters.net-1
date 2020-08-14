@@ -35,12 +35,15 @@ h2 {
 .link-text {
   text-decoration: none !important;
   border-bottom: 1px solid $black;
+  color: $black;
 
   &:hover {
     border-bottom: 2px solid $black;
+    color: $black;
   }
 
   &:focus {
     border-bottom: 3px solid $black;
+    color: $black;
   }
 }

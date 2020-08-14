@@ -60,20 +60,20 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 180);
+/******/ 	return __webpack_require__(__webpack_require__.s = 178);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 180:
+/***/ 178:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(181);
+module.exports = __webpack_require__(179);
 
 
 /***/ }),
 
-/***/ 181:
+/***/ 179:
 /***/ (function(module, exports, __webpack_require__) {
 
 // import jquery from 'jquery';
@@ -88,9 +88,9 @@ window.onload = function () {
     "use strict";
 
     $(document).ready(function () {
+      __webpack_require__(180);
+      __webpack_require__(181);
       __webpack_require__(182);
-      __webpack_require__(183);
-      __webpack_require__(184);
 
       console.log('Global js ready!');
 
@@ -131,12 +131,13 @@ window.onload = function () {
       }
     }
 
-    if (window.location.origin == "https://wiki.restarters.dev") {
+    // TODO: how to get this from .env?
+    if (window.location.origin == 'https://wiki.restarters.dev' || window.location.origin == 'https://wiki.restarters.net') {
       $('.wiki-nav-item').addClass('active');
 
-      $('.nav-tabs-block li a').removeClass('active');
+      $('.nav-tabs-block li.nav-item a.nav-link').removeClass('active');
 
-      $('.nav-tabs-block li a[href*="' + window.location.pathname + '"]').each(function () {
+      $('.nav-tabs-block li.nav-item a.nav-link[href*="' + window.location.pathname + '"]').each(function () {
         $(this).addClass('active');
       });
     }
@@ -145,7 +146,7 @@ window.onload = function () {
 
 /***/ }),
 
-/***/ 182:
+/***/ 180:
 /***/ (function(module, exports) {
 
 $('.toggle-dropdown-menu').click(function () {
@@ -173,17 +174,17 @@ $('.toggle-dropdown-menu').click(function () {
 
 /***/ }),
 
-/***/ 183:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 181:
+/***/ (function(module, exports) {
 
 // API call to current site - check for notifications
 function ajaxSearchNotifications() {
   // $base_url = window.location.host;
-
-  $('.notification-menu-items').hide();
+  $notification_menu_items = $('.notification-menu-items');
+  $notification_menu_items.hide();
   $('.toggle-notifications-menu .bell-icon-active').hide();
 
-  $url = "https://restarters.dev" + '/test/discourse/notifications';
+  $url = 'https://restarters.dev' + '/test/discourse/notifications';
 
   $.ajax({
     headers: {
@@ -211,27 +212,28 @@ function ajaxSearchNotifications() {
       if (Object.keys($notifications).length > 0) {
         console.log('Success: notifications found on Discourse.');
 
-        $('.notification-menu-items').css('display', '');
+        $notification_menu_items.css('display', '');
+        $notification_menu_items.empty();
         $('.toggle-notifications-menu .bell-icon-active').css('display', '');
 
         $.each($notifications, function (index, $notification) {
-          $('.notification-menu-items').append($('<li>').append($('<a>').attr('href', "https://restarters.dev" + '/notifications/' + $notification.id).text($notification.data.title)).attr('class', 'notifcation-text'));
+          $notification_menu_items.append($('<li>').append($('<a>').attr('href', 'https://restarters.dev/notifications/' + $notification.id).text($notification.data.title)).attr('class', 'notifcation-text'));
         });
       }
     }
   });
 }
 
-ajaxSearchNotifications();
+//ajaxSearchNotifications();
 
 /***/ }),
 
-/***/ 184:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 182:
+/***/ (function(module, exports) {
 
 // API call to current site - check for user authenticated
 function checkAuth() {
-  $url = "https://restarters.dev" + '/test/check-auth';
+  $url = 'https://restarters.dev' + '/test/check-auth';
 
   $notifications_list_item = $('.notifications-list-item').hide();
   $auth_menu_items = $('.auth-menu-items').hide();
@@ -296,7 +298,7 @@ function checkAuth() {
           $auth_menu_items.css('display', '');
         }
       } else {
-        $auth_list_item.find('a').attr('href', "https://restarters.dev");
+        $auth_list_item.find('a').attr('href', 'https://restarters.dev');
       }
 
       // Amend Main navigation dropdown links
@@ -307,7 +309,7 @@ function checkAuth() {
   });
 }
 
-checkAuth();
+//checkAuth();
 
 /***/ })
 

@@ -4,6 +4,10 @@
     padding: 0;
     display: flex;
     flex-flow: row wrap;
+    box-shadow: 5px 5px $brand-black;
+    background-color: $brand-white;
+    border: 1px solid $brand-black;
+
     li {
         padding: 0 1px;
         flex: 1 0 50%;
@@ -53,8 +57,7 @@
         }
 
         > div {
-            background-color: white;
-            border: 1px solid black;
+            background-color: $brand-white;
             padding: 15px;
             display: flex;
             flex-direction: column;
@@ -80,7 +83,7 @@
             font-size: 18px;
             font-weight: 400;
             padding: 0 0 15px 28px;
-            color: black;
+            color: $brand;
             flex: 1 0 auto;
         }
     }

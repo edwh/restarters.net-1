@@ -50,8 +50,8 @@ class CheckAuthService extends JsonResource
             'user' => collect([]),
         ]);
 
-        if ($email = Cookie::get('authenticated')) {
-            $this->handle($email);
+        if (Cookie::get('authenticated')) {
+            $this->handle(Cookie::get('authenticated'));
         }
 
         $this->menu->get('general')->put(Lang::get('general.about_page'), Lang::get('general.about_page_url'));
@@ -62,9 +62,7 @@ class CheckAuthService extends JsonResource
         $this->menu->get('general')->put(Lang::get('general.menu_faq'), Lang::get('general.faq_url'));
         $this->menu->get('general')->put(Lang::get('general.therestartproject'), Lang::get('general.restartproject_url'));
 
-        if ($user = $this->user) {
-            $this->populateUserDropdownItems($user);
-        }
+        //$this->populateUserDropdownItems($user);
     }
 
     private function handle($email)
@@ -76,8 +74,8 @@ class CheckAuthService extends JsonResource
         }
 
         $this->authenticated = true;
-        $this->is_admin = $this->user->getUserFromDiscourse()['user']['admin'];
-        $this->is_host = $this->user->getUserFromDiscourse()['user']['moderator'];
+        //$this->is_admin = $this->user->getUserFromDiscourse()['user']['admin'];
+        //$this->is_host = $this->user->getUserFromDiscourse()['user']['moderator'];
         $this->edit_profile_link = $this->edit_profile_link.$this->user->id;
 
         if ($this->is_host || $this->is_admin) {

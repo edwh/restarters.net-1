@@ -2,50 +2,32 @@
 
 // Body
 $body-bg: #f5f8fa;
-$brand: #4aaebc;
-$apricot: #ffbe5f;
+$brand: #222;
+$brand-black: #222;
+$brand-white: #fff;
+$brand-orange: #ffbe5f;
+$brand-blue: #0faca8;
+$brand-grey: #f5f7fa;
 
 // Typography
-$font-family-sans-serif: 'Asap', sans-serif;
+$font-family-sans-serif: Asap, sans-serif;
 $font-size-base: 0.9rem;
 $line-height-base: 1.6;
 
 $font-family-second: 'Open Sans', sans-serif;
 $font-family-third: 'Asap', sans-serif;
 
-$focus1 : #0062cc;
-$black: #000;
-
 .clear {
-  &:after,
-  &:before {
+
+  &:after, &:before {
     content: "";
     display: table;
     clear: both;
   }
+
 }
 
-$theme-colors: (
-  primary: $brand,
-  warning: $apricot,
-  info: #d0dae6,
-  success: #3fce97,
-);
+$focus1 : #0062cc;
 
-/** Custom spacing properties */
-$spacers: () !default;
-$spacers: map-merge(
-  (
-    10: 10px,
-    15: 15px,
-    20: 20px,
-    25: 25px,
-    30: 30px,
-    35: 35px,
-    40: 40px,
-    45: 45px,
-    50: 50px,
-    60: 60px,
-  ),
-  $spacers
-);
+$dropdown-link-active-color: $brand-black;
+$dropdown-link-active-bg: $brand-white;

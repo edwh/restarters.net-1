@@ -1,4 +1,11 @@
+#dropdownTitle {
+    padding-left: 0;
+    font-size: 40px;
+    font-weight:700;
+}
+
 .groups {
+    padding: 0 0 50px 0;
 
     .breadcrumb {
         margin: auto;
@@ -51,7 +58,6 @@
 }
 
 .modal-intro {
-    background-color: RGBA(3, 148, 166, 0.5);
     overflow: hidden;
     border-radius: 3px;
     .modal-dialog {
@@ -105,12 +111,11 @@
 .group-view {
 
     .events-list-wrap, .events-link-wrap{
-      border: 1px black solid;
+      border: 1px $brand-black solid;
     }
 
     .events-list-wrap {
       table {
-          background-color: white;
         margin-bottom: 0;
       }
     }
@@ -133,3 +138,13 @@
 }
 
 #headlineStats { min-height: 100px }
+
+#eventsTabContent {
+    background-color: $brand-white;
+    box-shadow: 5px 5px $brand-black;
+    border-color: black;
+}
+
+.table-cell-icon .group-icon {
+    margin: 8px 0;
+}

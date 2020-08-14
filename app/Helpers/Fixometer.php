@@ -111,16 +111,48 @@ class FixometerHelper
         if (is_null($userId)) {
             $userId = Auth::user()->id;
         }
+        $user = User::find($userId);
 
-        if (FixometerHelper::hasRole(Auth::user(), 'Administrator')) {
+        if (FixometerHelper::hasRole($user, 'Administrator')) {
             return true;
         }
-        if (FixometerHelper::hasRole(Auth::user(), 'Host')) {
+        if (FixometerHelper::hasRole($user, 'NetworkCoordinator')) {
+            $group = Party::find($partyId)->theGroup;
+            foreach ($group->networks as $network) {
+                if ($network->coordinators->contains($user)) {
+                    return true;
+                }
+            }
+        }
+        if (FixometerHelper::hasRole($user, 'Host')) {
             $group_id_of_event = Party::where('idevents', $partyId)->value('group');
             if (FixometerHelper::userIsHostOfGroup($group_id_of_event, $userId)) {
                 return true;
-            } elseif (empty(DB::table('events_users')->where('event', $partyId)->where('user', $userId)->first())) {
+            } elseif (empty(DB::table('events_users')->where('event', $partyId)->where('user', $user->id)->first())) {
                 return false;
+            }
+        }
+
+        return false;
+    }
+
+
+    public static function userCanApproveEvent($eventId, $userId = null)
+    {
+        if (is_null($userId)) {
+            $userId = Auth::user()->id;
+        }
+        $user = User::find($userId);
+
+        if (FixometerHelper::hasRole($user, 'Administrator')) {
+            return true;
+        }
+        if (FixometerHelper::hasRole($user, 'NetworkCoordinator')) {
+            $group = Party::find($eventId)->theGroup;
+            foreach ($group->networks as $network) {
+                if ($network->coordinators->contains($user)) {
+                    return true;
+                }
             }
         }
 
@@ -164,7 +196,7 @@ class FixometerHelper
         }
 
         $usersRole = $user->role()->first()->role;
-        $superusers = ['Root', 'Administrator'];
+        $superusers = ['Root', 'Administrator', 'NetworkCoordinator'];
 
         if (in_array($usersRole, $superusers)) {
             return true;
@@ -201,7 +233,7 @@ class FixometerHelper
      * uses it to format the alert
      * as wished
      * */
-    public static function printResponse($response)
+    public static function printResponse($response, $dismissible = true)
     {
         foreach ($response as $type => $text) {
             switch ($type) {
@@ -222,7 +254,9 @@ class FixometerHelper
 
                     break;
             }
-            echo '<div class="alert alert-'.$type.'  alert-dismissible" role="alert">
+            echo '<div class="alert alert-'.$type;
+            if ($dismissible) echo '  alert-dismissible';
+            echo '" role="alert">
                   <!--<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>-->
                   <i class="fa fa-'.$icon.'"></i> '.$text.'
 
@@ -818,8 +852,6 @@ class FixometerHelper
      */
     public static function skillsDetermineRole($skills = null)
     {
-
-      // If is null
         if (is_null($skills)) {
             $has_host_skills = 0;
         } else {

@@ -1,17 +1,11 @@
 html,
 body {
   height: 100%;
-  background-color: #fff;
-  color: #000;
+  background-color: #FFF;
+  color: #000000;
   font-family: $font-family-second;
 
-  .btn-link {
-    &:hover {
-      text-decoration-line: underline 3px;
-    }
-  }
-
-  & > .container {
+  &>.container:not(.container-nav) {
     padding-top: 20px;
     min-height: 1200px;
 
@@ -31,6 +25,7 @@ footer {
   @include media-breakpoint-down(md) {
     min-height: 65px;
   }
+
 }
 
 .overflow-hidden {
@@ -45,9 +40,13 @@ footer {
   max-width: 1270px;
 }
 
+.container-nav .navbar {
+    padding: 1rem 0;
+}
+
 .block {
-  background-color: #f9f9f9;
-  border: 1px solid #d9d9d9;
+  background-color: #F9F9F9;
+  border: 1px solid #D9D9D9;
   padding: 22px 20px 28px 20px;
   border-radius: 3px;
 
@@ -89,7 +88,8 @@ footer {
     margin-left: -35px;
     margin-right: -35px;
 
-    > div {
+    >div {
+
       padding-left: 35px;
       padding-right: 35px;
     }
@@ -100,7 +100,7 @@ footer {
   margin-left: -10px;
   margin-right: -10px;
 
-  > div {
+  >div {
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -110,7 +110,7 @@ footer {
   margin-left: -2px;
   margin-right: -2px;
 
-  > div {
+  >div {
     padding-left: 2px;
     padding-right: 2px;
   }
@@ -118,17 +118,21 @@ footer {
 
 .body-plain,
 .body-plain body {
-  background-color: #fff;
+  background-color: $brand-grey ;
 }
 
 .button-group {
   padding-top: 15px;
+
+  // .btn {
+  //   min-width: 120px;
+  // }
 }
 
 .form-group {
   &__offset {
     @include media-breakpoint-up(lg) {
-      padding-right: 140px;
+      padding-right: 210px;
     }
   }
 }
@@ -164,6 +168,7 @@ label.form-check-label {
 
 
 .form-control__select {
+
   padding: 0 !important;
   height: auto;
 
@@ -196,56 +201,27 @@ label.form-check-label {
     border: 0 none !important;
 
     .select2-selection__choice {
+
       background-color: $brand;
-      color: #fff;
+      color: #FFF;
       font-size: 14px;
       padding: 5px 12px 5px 10px;
       border: 0 none;
-      border-bottom: 3px solid #155e67;
+      border-bottom: 3px solid #155E67;
       line-height: 24px;
 
       .select2-selection__choice__remove {
         float: left;
-        color: #fff;
+        color: #FFF;
         font-size: 19px;
         font-weight: 400;
-        margin: 0 9px 0 0;
+        margin: 0 9px 0px 0;
       }
-    }
-  }
-}
 
-.form-control {
-  border-radius: 0;
-  border: 1px solid $black;
-
-  &:focus {
-    border: 2px solid $black;
-    border-color: $black;
-  }
-}
-
-.listed-calendar-links {
-  .input-group {
-    .select2-selection {
-      height: 50px;
-
-      .select2-selection__rendered {
-        line-height: 45px;
-      }
     }
 
-    .form-control,
-    .input-group-append {
-      height: 50px;
-
-      button {
-        height: 50px;
-        border: 2px solid $black;
-        border-left: 1px solid $black;
-      }
-    }
   }
+
 }
 
 .form-control {
@@ -300,8 +276,8 @@ table th {
       height: auto;
       display: block;
       border-radius: 3px;
-      background: #bec0c0;
-      border: 2px solid #bec0c0;
+      background: #BEC0C0;
+      border: 2px solid #BEC0C0;
     }
   }
 
@@ -319,6 +295,7 @@ table th {
         border: 0;
       }
     }
+
   }
 }
 
@@ -326,7 +303,7 @@ table th {
   display: flex;
   flex-flow: row wrap;
   border-radius: 3px;
-  border: 2px solid #bec0c0;
+  border: 2px solid #BEC0C0;
   width: 100px;
 
   .form-control {
@@ -341,7 +318,6 @@ table th {
   input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
-
     /* Removes leftover margin */
   }
 
@@ -354,20 +330,21 @@ table th {
     padding: 2px;
     border: 0;
     flex: 1;
-    background-color: #e6e6e6;
+    background-color: #E6E6E6;
   }
 }
 
 .ekko-lightbox {
-  background-color: rgba(3, 148, 166, 0.5);
+  //background-color: RGBA(3, 148, 166, 0.5);
 }
 
 .text-muted {
   font-size: 13px;
-  color: #5a5a5a;
+  color: #5A5A5A;
 }
 
 .skills-list {
+
   li {
     margin-bottom: 10px;
 
@@ -382,6 +359,7 @@ table th {
       }
     }
   }
+
 }
 
 .field-form-input {
@@ -396,7 +374,7 @@ table th {
     left: 0;
     top: 0;
     height: 100%;
-    background-color: #e6e6e6;
+    background-color: #E6E6E6;
     display: flex;
     justify-content: center;
     align-content: center;
@@ -407,20 +385,20 @@ table th {
     z-index: 2;
 
     &:focus {
-      background-color: #00b0c6;
+      background-color: #00B0C6;
 
       svg path {
-        fill: #fff;
+        fill: #fff
       }
     }
 
     &:hover {
-      background-color: #00b0c6;
-      border-color: #00b0c6;
+      background-color: #00B0C6;
+      border-color: #00B0C6;
       text-decoration: underline;
 
       svg path {
-        fill: #fff;
+        fill: #fff
       }
     }
 
@@ -480,7 +458,7 @@ h2 {
 
   a {
     color: #000;
-    border-bottom: 2px solid #d9d9d9;
+    border-bottom: 2px solid #D9D9D9;
     padding: 10px 0;
     display: block;
     background: url('../images/trapese-up.svg') no-repeat 100% 50%;
@@ -489,6 +467,7 @@ h2 {
       background: url('../images/trapese.svg') no-repeat 100% 50%;
     }
   }
+
 }
 
 .collapse-section {
@@ -503,13 +482,13 @@ h2 {
 }
 
 .input-group-append {
-  > div {
+  >div {
     margin: 7px 0 0 0;
   }
 }
 
 .dummy-field {
-  background-color: #eef0ef;
+  background-color: #EEF0EF;
   padding: 15px;
 }
 

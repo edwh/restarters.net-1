@@ -1,6 +1,9 @@
 .events {
     @extend .clear;
+    padding: 0 0 50px 0;
     min-height: 100%;
+
+
 
     header {
         padding-left: 55px;
@@ -52,10 +55,6 @@
                 width: 115px;
             }
         }
-
-        .btn-title {
-            padding: 0;
-        }
     }
 
     &__filter {
@@ -102,11 +101,13 @@
     &__description {
         padding: 15px;
         margin-bottom: 30px;
-        background-color: white;
-        border: 1px solid black;
+        background-color: $brand-white;
+        border: 1px solid $brand-black;
+        box-shadow: 5px 5px $brand-black;
         color: #5A5A5A;
         overflow: hidden;
         @extend .clear;
+        font-size:16px;
 
         button {
             border: 0;
@@ -141,11 +142,13 @@
 
     &-card {
         padding: 5px;
-        border-radius: 3px;
         margin-bottom: 30px;
-        background-color: white;
-        border: 1px solid black;
         font-size: 14px;
+
+        background-color: $brand-white !important;
+        border: 1px solid $brand-black !important;
+        border-radius: 0 !important;
+        box-shadow: 5px 5px $brand-black !important;
 
         address {
             margin: 0;
@@ -230,37 +233,11 @@
         margin: 30px 0 0 0;
     }
 
-    .table-add {
-      td:first-child,
-      th:first-child {
+    .table-add{
+      td:first-child, th:first-child {
           padding-left: 0;
       }
-
-      td {
-        &:not(:last-child) {
-          padding-right: 8px;
-        }
-      }
-
-      td {
-        .form-control {
-          height: 50px;
-
-          .select2-selection__rendered {
-            line-height: 40px !important;
-          }
-
-          .select2-selection__arrow {
-            top: 8px !important;
-          }
-        }
-
-        button {
-          height: 50px;
-        }
-      }
     }
-
 }
 
 .card .table-events .btn {
@@ -276,10 +253,10 @@
         font-family: $font-family-sans-serif;
     }
     .nav-link {
-        color: #000;
+        color: #555;
         background-color: #F9F9F9;
-        border-color: #D9D9D9;
-        border-radius: 3px 3px 0 0;
+        border-color: $brand-grey;
+        border-radius: 0;
         padding: 10px 15px;
 
         svg {
@@ -288,10 +265,13 @@
             margin-right: 5px;
         }
         &.active {
-            border-bottom: 1px white solid;
-            background-color: white;
+            color: $brand-black;
+            border-color: $brand-black;
+            border-top: 3px solid $brand-black;
+            border-bottom: 1px $brand-white solid;
+            background-color: $brand-white;
         }
-        &:hover, &:focus {
+        &:hover {
             text-decoration: underline;
         }
     }
@@ -312,7 +292,7 @@
 }
 
 .cell-primary-heading {
-  background-color:  $brand;
+  background-color: #0394A6;
 }
 
 .cell-danger-heading {
@@ -330,4 +310,22 @@
 
 .cell-info {
   background-color: #D1E5E6;
+}
+
+
+@media (min-width: 992px) {
+    #online-checkbox-group {
+        margin-top: 40px;
+    }
+}
+
+#events-attendance-tabs {
+    background-color: $brand-white !important;
+}
+
+#devices-section {
+    background-color: white;
+    border: 1px solid black;
+    box-shadow: 5px 5px black;
+    padding: 10px;
 }

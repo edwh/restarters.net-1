@@ -14,6 +14,7 @@ require('ekko-lightbox');
 require('bootstrap4-datetimepicker');
 require('./misc/notifications');
 require('./misc/device');
+require('./fixometer');
 require('leaflet');
 window.Dropzone = require('dropzone');
 window.Tokenfield = require("tokenfield");
@@ -1399,11 +1400,11 @@ function initAutocomplete() {
             $('#dead-insert').html(  json.stats['dead_devices'] );
 
             //Give users some visual feedback
-            $('.btn-add').addClass('btn-success');
-            $('.btn-add').removeClass('btn-primary');
+            $('.btn-add').addClass('btn-primary');
+            $('.btn-add').removeClass('btn-secondary');
             setTimeout(function(e){
-              $('.btn-add').removeClass('btn-success');
-              $('.btn-add').addClass('btn-primary');
+              $('.btn-add').removeClass('btn-primary');
+              $('.btn-add').addClass('btn-secondary');
             }, 1000);
 
             loadDropzones();
@@ -1666,7 +1667,7 @@ function initAutocomplete() {
     });
 
     // Set min height so the language menu sits just under the overall height of the browser window
-    $('body > .container').css('min-height', ( $(window).height() - $('nav.navbar').height() ) +'px');
+    $('body > .container:not(.container-nav)').css('min-height', ( $(window).height() - $('nav.navbar').height() ) +'px');
 
     $(".toggle-invite-modals").click(function (e) {
 

@@ -1,41 +1,38 @@
 .modal {
-  button[type=submit] {
-    margin-top: 9px;
-  }
+    button[type=submit] {
+      margin-top: 9px;
+    }
 }
 
 .modal-header {
   h5 {
     font-size: 20px;
     margin-bottom: 0;
+    font-weight: 700;
   }
-
   .close {
     margin: -1.3rem -1.5rem -1rem auto;
   }
-
   border: 0 none;
   padding-bottom: 0;
 }
 
 .modal-content {
   padding: 30px 20px 20px;
-
   @include media-breakpoint-up(md) {
     padding: 30px 35px 40px;
   }
 }
 
 .form-control {
-  border: 2px solid #bec0c0;
-
-  &:focus {
+  border: 2px solid #BEC0C0;
+  &:focus{
     border-color: $brand;
   }
 }
 
 .input-group .input-group-append .input-group-text {
-  border: 2px solid #bec0c0;
+  border: 2px solid #BEC0C0;
   border-left: 0 none;
 }
 
@@ -47,7 +44,7 @@
 }
 
 .after-offset {
-  color: #5a5a5a;
+  color: #5A5A5A;
   font-size: 90%;
 }
 
@@ -60,15 +57,15 @@
 // }
 
 .modal__invite {
-  textarea {
-    min-height: 140px;
-  }
+    textarea {
+      min-height: 140px;
+    }
 }
 
 .modal__description {
-  p:last-child {
-    margin-bottom: 0;
-  }
+    p:last-child {
+      margin-bottom: 0;
+    }
 }
 
 .modal-form {
@@ -77,20 +74,16 @@
     font-size: 20px;
     font-family: $font-family-sans-serif;
   }
-
   .modal-dialog {
     max-width: 445px;
   }
-
   .close {
     color: #000 !important;
     font-size: 40px !important;
   }
-
   .btn-primary {
     margin: auto 0 !important;
   }
-
   .button-group {
     padding-top: 0;
     padding-bottom: 20px;
@@ -101,7 +94,6 @@
   .modal-content {
     padding: 40px 55px;
   }
-
   .close {
     right: 35px !important;
     top: 20px !important;
@@ -121,7 +113,7 @@
   .modal-content {
     padding: 50px;
     border: 0;
-    border-radius: 5px;
+  border-radius: 5px;
   }
 }
 
@@ -132,14 +124,13 @@
     z-index: 1000;
     top: 0;
     left: 0;
-    background: #fff;
+    background: #FFF;
     height: 100%;
     overflow: scroll;
     padding: 30px;
-    background-color: #f9f9f9;
+    background-color: #F9F9F9;
 
-    .block,
-    .edit-panel {
+    .block, .edit-panel {
       border: 0;
       background-color: transparent;
       padding-left: 0;
@@ -156,14 +147,13 @@
     z-index: 1000;
     top: 0;
     left: 0;
-    background: #fff;
+    background: #FFF;
     height: 100%;
     overflow: scroll;
     padding: 30px;
-    background-color: #f9f9f9;
+    background-color: #F9F9F9;
 
-    .block,
-    .edit-panel {
+    .block, .edit-panel {
       border: 0;
       background-color: transparent;
       padding-left: 0;
@@ -174,39 +164,38 @@
 }
 
 .mobile-search-bar {
-  @include media-breakpoint-down(sm) {
-    display: flex;
-    align-content: center;
+    @include media-breakpoint-down(sm) {
+      display: flex;
+      align-content: center;
 
-    &__close {
-      margin: auto 0 auto 30px;
-      padding: 0;
-      background-color: transparent;
-      border: 0;
+      &__close {margin: auto 0 auto 30px;
+        padding: 0;
+        background-color: transparent;
+        border: 0;
 
-      svg {
-        display: block;
-        margin: auto;
+        svg {
+          display: block;
+          margin: auto;
+        }
       }
     }
-  }
 }
 
 .mobile-search-bar-md {
-  @include media-breakpoint-down(md) {
-    display: flex;
-    align-content: center;
+    @include media-breakpoint-down(md) {
+      display: flex;
+      align-content: center;
 
-    &__close {
-      margin: auto 0 auto 30px;
-      padding: 0;
-      background-color: transparent;
-      border: 0;
+      &__close {
+        margin: auto 0 auto 30px;
+        padding: 0;
+        background-color: transparent;
+        border: 0;
 
-      svg {
-        display: block;
-        margin: auto;
+        svg {
+          display: block;
+          margin: auto;
+        }
       }
     }
-  }
 }

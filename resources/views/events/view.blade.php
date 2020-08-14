@@ -19,9 +19,9 @@
     <div class="alert alert-success">
 
       <div class="row">
-        <div class="col-md-8 col-lg-9 d-flex flex-column align-content-center">@lang('events.rsvp_message')</div>
-        <div class="col-md-4 col-lg-3 d-flex flex-column align-content-center">
-          <a href="/party/cancel-invite/{{{ $is_attending->event }}}" class="btn btn-info">@lang('events.rsvp_button')</a>
+        <div class="col-md-8 col-lg-8 d-flex flex-column align-content-center">@lang('events.rsvp_message')</div>
+        <div class="col-md-4 col-lg-4 text-right">
+          <a href="/party/cancel-invite/{{{ $is_attending->event }}}" class="btn btn-secondary">@lang('events.rsvp_button')</a>
         </div>
       </div>
 
@@ -61,7 +61,7 @@
       <div class="col-lg-8 d-flex flex-column">
 
         <header>
-          <h1>{{ $event->getEventName() }}</h1>
+            <h1>{{ $event->getEventName() }}@if ($event->online) <span class="badge badge-info">@lang('events.online_event')</span>@endif</h1>
           <p>Organised by <a href="/group/view/{{ $formdata->group_id }}">{{ trim($formdata->group_name) }}</a></p>
           {{--
           <nav aria-label="breadcrumb">
@@ -143,11 +143,13 @@
       <div class="row no-gutters">
         <div class="col-lg-4">
 
-          <aside class="sidebar-lg-offset">
+          <aside id="event-details" class="sidebar-lg-offset">
 
             <h2>Event details</h2>
             <div class="card events-card">
+                @if ( ! $event->online )
               <div id="event-map" class="map" data-latitude="{{ $formdata->latitude }}" data-longitude="{{ $formdata->longitude }}" data-zoom="14"></div>
+              @endif
 
               <div class="events-card__details">
 
@@ -179,8 +181,11 @@
                       @endif
                   </div>
 
+                  @if ( ! $event->online )
                   <div class="col-4 d-flex flex-column"><strong>Address: </strong></div>
+
                   <div class="col-8 d-flex flex-column"><address>{{ $formdata->location }}</address></div>
+                  @endif
 
                   @if( count($hosts) > 0 )
                   <div class="col-4 d-flex flex-column"><strong>{{{ str_plural('Host', count($hosts) ) }}}: </strong></div>
@@ -199,9 +204,9 @@
                     <div>
                       <div class="input-group-qty">
                         <label for="participants_qty" class="sr-only">Quantity:</label>
-                        <button class="increase btn-value">+</button>
-                        <input name="participants_qty" id="participants_qty" maxlength="3" value="{{ $formdata->pax }}" title="Qty" class="input-text form-control qty" type="number">
                         <button class="decrease btn-value">–</button>
+                        <input name="participants_qty" id="participants_qty" maxlength="3" value="{{ $formdata->pax }}" title="Qty" class="input-text form-control qty" type="number">
+                        <button class="increase btn-value">+</button>
                       </div>
                     </div>
                     @else
@@ -224,9 +229,9 @@
                       <div>
                         <div class="input-group-qty">
                           <label for="volunteer_qty" class="sr-only">Quantity:</label>
-                          <button class="increaseVolunteers btn-value">+</button>
-                          <input name="volunteer_qty" id="volunteer_qty" maxlength="3" value="{{ $event->volunteers }}" title="Qty" class="input-text form-control qty" type="number">
                           <button class="decreaseVolunteers btn-value">–</button>
+                          <input name="volunteer_qty" id="volunteer_qty" maxlength="3" value="{{ $event->volunteers }}" title="Qty" class="input-text form-control qty" type="number">
+                          <button class="increaseVolunteers btn-value">+</button>
                         </div>
                       </div>
                       @else

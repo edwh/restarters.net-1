@@ -1,11 +1,16 @@
 .users-list {
+
+    .btn-skills {
+        font-size: small;
+    }
+
     padding: 0;
     margin: 0;
     flex-flow: row wrap;
     display: flex;
-    border: 1px black solid;
+    border: 1px solid $brand-black;
+    background-color: $brand-white;
     border-bottom:0;
-    background-color: white;
 
 
     .badge-primary  {
@@ -15,12 +20,10 @@
     }
 
     &-wrap {
-        border-left: 1px #D9D9D9 solid;
-        border-right: 1px #D9D9D9 solid;
-        border-bottom: 1px #D9D9D9 solid;
-        border-radius: 3px;
+        border: 1px solid $brand-black;
         padding: 10px;
         margin-bottom: 15px;
+        box-shadow: 5px 5px $brand-black;
     }
 
     &__remove {
@@ -64,7 +67,6 @@
     }
 
     li {
-        background-color: white;
         list-style: none;
         flex-direction: column;
         display: flex;
@@ -72,13 +74,12 @@
         padding-left: 60px;
         position: relative;
         font-size: 13px;
-        border-bottom: 1px #D9D9D9 solid;
+        border-bottom: 1px #aaa solid;
         flex: 1 0 100%;
         min-height: 70px;
         @include media-breakpoint-up(lg) {
             flex: 1 0 33.333%;
             max-width: 33.333%;
-            border-right: 1px #D9D9D9 solid;
 
             &:nth-child(3n) {
                 border-right: 0;
@@ -133,16 +134,17 @@
                 text-decoration: none;
             }
         }
-
-        button {
-            font-size: small;
-        }
     }
 
     &__single {
         padding: 0;
-        background-color: white;
+        background-color: #F9F9F9;
         @extend .clear;
+
+        .users-list {
+            border-right: 0;
+            border-left: 0;
+        }
 
         li {
             @include media-breakpoint-up(lg) {
@@ -154,9 +156,9 @@
         }
 
         .users-list__more {
+            font-size: small;
             padding: 15px;
             margin: auto;
-            border: 1px solid black;
         }
 
     }
@@ -168,6 +170,7 @@
         padding: 0.25rem 1.5rem;
       }
     }
+
 }
 
 span.popover-usergroups {

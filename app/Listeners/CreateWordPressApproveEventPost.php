@@ -37,6 +37,11 @@ class CreateWordPressApproveEventPost
      */
     public function handle(ApproveEvent $event)
     {
+        // TODO: why do we receive both the repair event, and the data array?
+        // The data array is just the details of the repair event.
+        // It seems like we only need one.
+        // The 'moderate' flag is perhaps the only data point that should come
+        // through extra?
         $partyId = $event->party->idevents;
         $data = $event->data;
 
@@ -47,10 +52,9 @@ class CreateWordPressApproveEventPost
             return;
         }
 
-        $restartNetwork = Network::where('name', 'Restart')->first();
         if ( ! $theParty->shouldPushToWordpress()) {
             $theParty->update(['wordpress_post_id' => '99999']);
-            Log::info("Events for groups in this network are not published");
+            Log::info("Approved - but events for groups in this network are not published to WordPress");
             return;
         }
 
@@ -73,7 +77,8 @@ class CreateWordPressApproveEventPost
                     ['key' => 'party_timestamp_end', 'value' => $endTimestamp],
                     ['key' => 'party_stats', 'value' => $partyId],
                     ['key' => 'party_lat', 'value' => $data['latitude']],
-                    ['key' => 'party_lon', 'value' => $data['longitude']]
+                    ['key' => 'party_lon', 'value' => $data['longitude']],
+                    ['key' => 'party_online', 'value' => $data['online'] ?? 0],
                 ];
 
                 $content = [

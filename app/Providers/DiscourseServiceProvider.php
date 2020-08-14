@@ -18,10 +18,15 @@ class DiscourseServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        if (config('restarters.features.discourse_integration') === false) {
+            return;
+        }
+
         $this->app->bind('discourse-client', function ($app, $parameters) {
             return new Client([
                 'base_uri' => config('discourse-api.base_url'),
                 'headers' => [
+                    'User-Agent' => 'restarters/1.0',
                     'Api-Key' => config('discourse-api.api_key'),
                     'Api-Username' => $parameters['username'] ?? config('discourse-api.api_username'),
                 ],

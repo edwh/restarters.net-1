@@ -31,8 +31,6 @@
     .options {
         background-color: #FFF;
         color: #000;        
-        border: 5px solid #FFDD57;
-        border-radius: 5px;
         padding: 5px;
     }
     
@@ -43,8 +41,6 @@
     .problem {
         font-size: 1rem;
         background-color: #FFF;
-        border: 5px solid #FFDD57;
-        border-radius: 5px;
     }
 
     .misccat .btn {
@@ -78,6 +74,7 @@
     .question, .statement {
         font-size: 1rem;
         font-weight: bold;
+        text-transform: uppercase;
     }
     
     .text-is-italic {
@@ -87,5 +84,4 @@
     .border-grey {        
         border: 1px solid #EEE;
     }
-
 </style>

@@ -23,48 +23,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Lang;
 use Notification;
 use View;
 
 class DeviceController extends Controller
 {
-    // public function __construct($model, $controller, $action){
-    //     parent::__construct($model, $controller, $action);
-    //
-    //     $Auth = new Auth($url);
-    //     if(!$Auth->isLoggedIn()){
-    //         header('Location: /user/login');
-    //     }
-    //     else {
-    //
-    //         $user = $Auth->getProfile();
-    //         $this->user = $user;
-    //         $this->set('user', $user);
-    //         $this->set('header', true);
-    //
-    //         if(FixometerHelper::hasRole($this->user, 'Host')){
-    //             $Group = new Group;
-    //             $Party = new Party;
-    //             $group = $Group->ofThisUser($this->user->id);
-    //             $this->set('usergroup', $group[0]);
-    //             $parties = $Party->ofThisGroup($group[0]->idgroups);
-    //
-    //             foreach($parties as $party){
-    //                 $this->hostParties[] = $party->idevents;
-    //             }
-    //             $User = new User;
-    //             $this->set('profile', $User->profilePage($this->user->id));
-    //
-    //             return view('device.index', [
-    //               'user' => $user,
-    //               'header' => true,
-    //               'usergroup' => $group[0],
-    //               'profile' => $User->profilePage($this->user->id),
-    //             ]);
-    //         }
-    //     }
-    // }
-
     public function index($search = null)
     {
         $Category = new Category;
@@ -74,28 +38,32 @@ class DeviceController extends Controller
         $all_groups = Group::all();
 
         $most_recent_finished_event = Party::with('theGroup')
-        ->hasDevicesRepaired(5)
+        ->hasDevicesRepaired(1)
         ->eventHasFinished()
         ->orderBy('event_date', 'DESC')
         ->first();
 
-        // TODO: Breaks page and causes 500 error.
-        // $global_impact_data = app('App\Http\Controllers\ApiController')
-        // ->homepage_data();
+        $global_impact_data = app('App\Http\Controllers\ApiController')
+                            ->homepage_data();
+        $global_impact_data = $global_impact_data->getData();
 
-        // $global_impact_data = $global_impact_data->getData();
+        $user_groups = Group::with('allRestarters', 'parties', 'groupImage.image')
+        ->join('users_groups', 'users_groups.group', '=', 'groups.idgroups')
+        ->join('events', 'events.group', '=', 'groups.idgroups')
+        ->where('users_groups.user', Auth::id())
+        ->orderBy('groups.name', 'ASC')
+        ->groupBy('groups.idgroups')
+        ->select('groups.*')
+        ->get();
 
-        // Loads instantly...
-        $global_impact_data = (object) [
-            'participants' => '16,424',
-            'hours_volunteered' => '29,832',
-            'items_fixed' => '13,453',
-            'waste_prevented' => '19,338',
-            'emissions' => '300568',
-        ];
+        $items = Device::with(['deviceEvent'])
+               ->join('events', 'events.idevents', '=', 'devices.event')
+               ->orderBy('events.event_date', 'desc')
+               ->orderBy('devices.iddevices', 'asc')
+               ->paginate(15);
 
-        return view('device.index', [
-            'title' => 'Devices',
+        return view('fixometer.index', [
+            'title' => Lang::get('devices.fixometer'),
             'categories' => $categories,
             'groups' => $all_groups,
             'most_recent_finished_event' => $most_recent_finished_event,
@@ -112,6 +80,8 @@ class DeviceController extends Controller
             'status' => null,
             'sort_direction' => 'DSC',
             'sort_column' => 'event_date',
+            'user_groups' => $user_groups,
+            'items' => $items,
         ]);
     }
 
@@ -206,52 +176,32 @@ class DeviceController extends Controller
         $footprintRatioCalculator = new FootprintRatioCalculator();
         $emissionRatio = $footprintRatioCalculator->calculateRatio();
 
-        $impact_data = (object) [
-          'participants' => 0,
-          'hours_volunteered' => 0,
-          'items_fixed' => 0,
-          'waste_prevented' => 0,
-          'emissions' => 0,
-        ];
-
-        $all_deviced_grouped->each(function($devices, $event_id) use($impact_data, $emissionRatio) {
-          $devices->each(function($device) use($impact_data, $emissionRatio) {
-            $stats = $device->getStats($emissionRatio);
-
-            if ($stats['is_fixed']) {
-              $impact_data->items_fixed += 1;
-            }
-
-            if ($stats['co2_emissions_prevented'] > 0) {
-              $impact_data->emissions += $stats['co2_emissions_prevented'];
-            }
-
-            if ($stats['ewaste_prevented'] > 0) {
-              $impact_data->waste_prevented += $stats['ewaste_prevented'];
-            }
-          });
-
-          $event = $devices->last()->deviceEvent;
-          $impact_data->participants += $event->pax;
-          $impact_data->hours_volunteered += $event->hoursVolunteered();
-        });
-
-        $impact_data->emissions = round($impact_data->emissions);
-        $impact_data->waste_prevented = number_format(round($impact_data->waste_prevented, 2), 0);
+        $global_impact_data = app('App\Http\Controllers\ApiController')
+                            ->homepage_data();
+        $global_impact_data = $global_impact_data->getData();
 
         $most_recent_finished_event = Party::with('theGroup')
-        ->hasDevicesRepaired(5)
+        ->hasDevicesRepaired(1)
         ->eventHasFinished()
         ->orderBy('event_date', 'DESC')
         ->first();
 
-        return view('device.index', [
-            'impact_data' => $impact_data,
+        $user_groups = Group::with('allRestarters', 'parties', 'groupImage.image')
+        ->join('users_groups', 'users_groups.group', '=', 'groups.idgroups')
+        ->join('events', 'events.group', '=', 'groups.idgroups')
+        ->where('users_groups.user', Auth::id())
+        ->orderBy('groups.name', 'ASC')
+        ->groupBy('groups.idgroups')
+        ->select('groups.*')
+        ->get();
+
+        return view('fixometer.index', [
+            'impact_data' => $global_impact_data,
             'title' => 'Devices',
             'categories' => $categories,
             'groups' => Group::all(),
             'most_recent_finished_event' => $most_recent_finished_event,
-            'list' => $all_devices_paginated,
+            'items' => $all_devices_paginated,
             'selected_groups' => $request->input('groups'),
             'selected_categories' => $request->input('categories'),
             'from_date' => $request->input('from-date'),
@@ -264,6 +214,7 @@ class DeviceController extends Controller
             'wiki' => $request->input('wiki'),
             'sort_direction' => $sort_direction,
             'sort_column' => $sort_column,
+            'user_groups' => $user_groups,
         ]);
     }
 
@@ -431,7 +382,7 @@ class DeviceController extends Controller
 
             $audits = Device::findOrFail($id)->audits;
 
-            return view('device.edit', [
+            return view('fixometer.edit', [
                 'title' => 'Edit Device',
                 'response' => $response,
                 'categories' => $Categories->findAll(),
